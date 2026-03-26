@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 const JoinRoom = () => {
   const navigate = useNavigate();
   const [roomIdValue, setRoomIdValue] = useState("");
+  const [name, setName] = useState("");
 
-  const newRoomId = (e) => {
+  const newRoomId = () => {
     const characters = "abcdefghijklmnopqrstuvwxyz1234567890";
     const generatePart = () => {
       let a = "";
@@ -16,7 +17,7 @@ const JoinRoom = () => {
       return a;
     };
     const roomId = `${generatePart()}-${generatePart()}-${generatePart()}`;
-    e.target.value = roomId;
+
     setRoomIdValue(roomId);
   };
 
@@ -24,15 +25,23 @@ const JoinRoom = () => {
     setRoomIdValue(e.target.value);
   };
 
-  const enterRoom = () => {
-    navigate(`/room/${roomIdValue}`);
+  const changeName = (e) => {
+    setName(e.target.value);
+  };
+
+  const enterRoom = (e) => {
+    e.preventDefault();
+
+    if (name && roomIdValue) {
+      navigate(`/room/${roomIdValue}`, {
+        state: { name },
+      });
+    }
   };
 
   return (
     <div className="bg-[#0A0A0A] min-h-screen flex justify-center items-center px-4">
-      {/* Main Div */}
       <div className="bg-[#111111] border border-gray-800 w-full max-w-md rounded-2xl p-8 md:p-10 shadow-2xl">
-        {/* Heading */}
         <div className="flex flex-col items-center text-center">
           <div className="p-4 bg-blue-600/10 border border-blue-500/20 w-fit mb-6 rounded-2xl">
             <LogIn size={32} className="text-blue-500" />
@@ -45,9 +54,7 @@ const JoinRoom = () => {
           </p>
         </div>
 
-        {/* Form */}
-        <form className="mt-10 space-y-5">
-          {/* Room input divs */}
+        <form onSubmit={enterRoom} className="mt-10 space-y-5">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">
               Room ID
@@ -71,12 +78,13 @@ const JoinRoom = () => {
             </div>
           </div>
 
-          {/* Username input div */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">
               Your Name
             </label>
             <input
+              onChange={changeName}
+              value={name}
               className="w-full bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
               type="text"
               placeholder="How should others see you?"
@@ -84,16 +92,16 @@ const JoinRoom = () => {
             />
           </div>
 
-          {/* Action buttons */}
           <div className="pt-4 space-y-3">
             <button
-              onClick={enterRoom}
+              type="submit"
               className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-lg transition-all transform active:scale-[0.98] shadow-lg shadow-blue-500/10"
             >
               Enter Room
             </button>
             <button
               onClick={() => navigate("/dashboard")}
+              type="button"
               className="w-full bg-transparent border border-transparent hover:bg-gray-900 text-slate-500 hover:text-slate-300 py-2 rounded-xl text-sm transition-all"
             >
               Back to Dashboard

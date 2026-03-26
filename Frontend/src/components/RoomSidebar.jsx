@@ -9,8 +9,9 @@ import {
 import React, { useState } from "react";
 import Messages from "./Messages";
 import Icons from "./Icons";
+import UserBox from "./UserBox";
 
-const RoomSidebar = () => {
+const RoomSidebar = ({ activeUsers }) => {
   const [expanded, setExpanded] = useState(false);
   const generalClass =
     "border-r border-gray-800 bg-[#0d0d0d] transition-all duration-300 flex flex-col items-center py-4 gap-6 shrink-0";
@@ -150,16 +151,8 @@ const RoomSidebar = () => {
               </button>
               {active == "users" && (
                 <div className="flex flex-col gap-4 pl-9 pb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-300">
-                      Rajratnam (You)
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                    <span className="text-sm text-gray-400">Guest_404</span>
-                  </div>
+                  {activeUsers &&
+                    activeUsers.map((user) => <UserBox name={user.name} />)}
                 </div>
               )}
             </div>
