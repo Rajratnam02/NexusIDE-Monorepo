@@ -11,16 +11,16 @@ import Messages from "./Messages";
 import Icons from "./Icons";
 
 const RoomSidebar = () => {
-  const [expanded, setExpaded] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const generalClass =
-    "absolute h-full border-r border-gray-800 bg-[#0d0d0d] transition-all duration-300 flex flex-col items-center py-4 gap-6 shrink-0";
+    "border-r border-gray-800 bg-[#0d0d0d] transition-all duration-300 flex flex-col items-center py-4 gap-6 shrink-0";
   const nonExpandedClass = "w-12";
   const expandedClass = "w-64";
   const [active, setActive] = useState("files");
   const iconClass = `cursor-pointer transition-colors text-gray-600 group hover:text-gray-400 disabled:text-blue-400`;
 
   const clickHandler = (name) => {
-    setExpaded(true);
+    setExpanded(true);
     setActive(name);
   };
 
@@ -100,7 +100,7 @@ const RoomSidebar = () => {
         <div className="text-white h-full flex flex-col w-full px-6 py-2">
           <div className="flex mb-8">
             <button
-              onClick={() => setExpaded(false)}
+              onClick={() => setExpanded(false)}
               className="text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-2"
             >
               <ChevronLeft size={20} />
