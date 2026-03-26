@@ -1,13 +1,4 @@
-import {
-  Clock,
-  Code2,
-  Folder,
-  LogOut,
-  MoveLeft,
-  Settings,
-  SquareArrowRightExit,
-  User,
-} from "lucide-react";
+import { Clock, Code2, Folder, LogOut, Settings, User } from "lucide-react";
 import React from "react";
 import SidebarButton from "./SidebarButton";
 import { useNavigate } from "react-router-dom";

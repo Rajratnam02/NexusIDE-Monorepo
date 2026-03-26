@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import Messages from "./Messages";
 import Icons from "./Icons";
 import UserBox from "./UserBox";
+import FilesDiv from "./FilesDiv";
 
 const RoomSidebar = ({ activeUsers }) => {
   const [expanded, setExpanded] = useState(false);
@@ -124,15 +125,11 @@ const RoomSidebar = ({ activeUsers }) => {
               </button>
               {active == "files" && (
                 <div className="flex flex-col gap-3 pl-9 pb-6">
-                  <span className="text-sm text-gray-400 hover:text-white cursor-pointer transition-colors">
-                    index.js
-                  </span>
-                  <span className="text-sm text-gray-400 hover:text-white cursor-pointer transition-colors">
-                    App.js
-                  </span>
-                  <span className="text-sm text-gray-400 hover:text-white cursor-pointer transition-colors">
-                    styles.css
-                  </span>
+                  {["Index.js", "App.js", "Style.css", "Main.jsx"].map(
+                    (filename) => (
+                      <FilesDiv filename={filename} />
+                    ),
+                  )}
                 </div>
               )}
             </div>
