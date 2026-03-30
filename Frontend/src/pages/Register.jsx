@@ -1,109 +1,64 @@
-import { Code2 } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
+import Logo from "../../public/Logo";
+import GoogleIcon from "../../public/GoogleIcon";
 import { useNavigate } from "react-router-dom";
+import { auth, googleProvider } from "../configs/firebase";
+import { signInWithPopup } from "firebase/auth";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (name && email && password) {
-      navigate("/dashboard");
+  const handleSignUp = async (e) => {
+    try {
+      e.preventDefault();
+      const response = await signInWithPopup(auth, googleProvider);
+      const user = response.user;
+      console.log(user);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   return (
     <div className="bg-[#0A0A0A] min-h-screen flex justify-center items-center px-4">
-      <div className="bg-[#111111] border border-gray-800 w-full max-w-md rounded-2xl px-8 md:px-10 py-5 shadow-2xl">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex items-center gap-3 justify-center">
-            <div
-              onClick={() => {
-                navigate("/");
-              }}
-              className="p-3 bg-blue-600 cursor-pointer hover:rotate-12 transition-transform duration-300 w-fit rounded-2xl"
-            >
-              <Code2 className="text-white w-6 h-6" />
-            </div>
-            <p
-              onClick={() => {
-                navigate("/");
-              }}
-              className="text-white cursor-pointer text-xl tracking-tight font-bold"
-            >
-              Nexus<span className="text-blue-600">IDE</span>
+      <div className="bg-[#111111] border border-gray-800 w-full max-w-md rounded-3xl p-8 md:p-12 shadow-[0_0_50px_-12px_rgba(37,99,235,0.1)]">
+        <div className="flex flex-col text-center  border-white">
+          <Logo />
+          <div className="flex flex-col items-center  border-white">
+            <h1 className="text-white text-center mt-6 font-bold text-3xl tracking-tight">
+              Sign Up
+            </h1>
+            <p className="text-slate-500 text-center mt-2 text-sm max-w-62.5">
+              Start coding in real-time.
             </p>
           </div>
-          <h1 className="text-3xl mt-5 font-bold text-white tracking-tight">
-            Create an account
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm">
-            Sign up to start your workspace
-          </p>
+
+          <div
+            onClick={handleSignUp}
+            className="w-full mt-6 cursor-pointer flex items-center justify-center gap-3 bg-white hover:bg-gray-100 text-black py-3.5 rounded-xl font-bold text-md transition-all transform active:scale-[0.98] shadow-xl"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </div>
+
+          <div
+            onClick={() => {
+              navigate("/");
+            }}
+            className="bg-[#1A1A1A] border mt-4 cursor-pointer border-gray-800 hover:border-gray-700 text-slate-400 hover:text-white py-3 rounded-xl text-sm font-medium transition-all"
+          >
+            Return
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-gray-800/30 text-center">
+            <p className="text-slate-500 text-xs">
+              By signing up, you agree to our
+              <span className="text-blue-500 cursor-pointer hover:underline ml-1">
+                Terms of Service
+              </span>
+            </p>
+          </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="mt-10 space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-              Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <div className="pt-4 space-y-3">
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-lg transition-all transform active:scale-[0.98] shadow-lg shadow-blue-500/10"
-            >
-              Sign Up
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="w-full bg-transparent border border-transparent hover:bg-gray-900 text-slate-500 hover:text-slate-300 py-2 rounded-xl text-sm transition-all"
-            >
-              Already have an account? Sign in
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

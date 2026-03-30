@@ -1,9 +1,12 @@
 import { Code2 } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
+import LoggedOut from "./LoggedOut";
+import LoggedIn from "./LoggedIn";
 
 const Navbar = () => {
-  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+
   return (
     <div className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-2 group cursor-pointer">
@@ -15,24 +18,7 @@ const Navbar = () => {
         </p>
       </div>
 
-      <div className="flex gap-8 text-sm items-center">
-        <p
-          onClick={() => {
-            navigate("/login");
-          }}
-          className="cursor-pointer font-medium hover:text-blue-500 "
-        >
-          Log in
-        </p>
-        <p
-          onClick={() => {
-            navigate("/register");
-          }}
-          className="bg-blue-600 py-2 px-5 font-medium rounded-full cursor-pointer hover:bg-blue-500/90"
-        >
-          Get Started
-        </p>
-      </div>
+      {user ? <LoggedIn /> : <LoggedOut />}
     </div>
   );
 };

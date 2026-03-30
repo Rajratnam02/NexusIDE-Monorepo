@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Logo from "../../public/Logo";
 
 const JoinRoom = () => {
   const navigate = useNavigate();
@@ -43,10 +44,8 @@ const JoinRoom = () => {
     <div className="bg-[#0A0A0A] min-h-screen flex justify-center items-center px-4">
       <div className="bg-[#111111] border border-gray-800 w-full max-w-md rounded-2xl p-8 md:p-10 shadow-2xl">
         <div className="flex flex-col items-center text-center">
-          <div className="p-4 bg-blue-600/10 border border-blue-500/20 w-fit mb-6 rounded-2xl">
-            <LogIn size={32} className="text-blue-500" />
-          </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <Logo />
+          <h1 className="text-3xl mt-6 font-bold text-white tracking-tight">
             Join a Session
           </h1>
           <p className="text-slate-400 mt-2 text-sm">

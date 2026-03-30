@@ -1,8 +1,11 @@
 import { Plus } from "lucide-react";
 import React from "react";
 import ProjectCard from "./ProjectCard";
+import { useAuthStore } from "../stores/authStore";
 
 const Projects = () => {
+  const user = useAuthStore((state) => state.user)
+
   const projectsData = [
     {
       id: 1,
@@ -46,7 +49,7 @@ const Projects = () => {
     <div className="flex-1 pb-7 flex-col flex ">
       <div className="flex mx-15 mt-15 items-end justify-between">
         <div>
-          <p className="text-3xl font-bold tracking-tight">Welcome back, Raj</p>
+          <p className="text-3xl font-bold tracking-tight">Welcome back, {user.displayName}</p>
           <p className="text-gray-400 mt-1">
             Ready to build something amazing today?
           </p>
