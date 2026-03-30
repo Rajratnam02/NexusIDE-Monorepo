@@ -99,11 +99,11 @@ const JoinRoom = () => {
               Enter Room
             </button>
             <button
-              onClick={() => navigate("/dashboard")}
               type="button"
-              className="w-full bg-transparent border border-transparent hover:bg-gray-900 text-slate-500 hover:text-slate-300 py-2 rounded-xl text-sm transition-all"
+              onClick={() => navigate("/")}
+              className="w-full bg-[#1A1A1A] border border-gray-800 hover:border-gray-700 text-slate-400 hover:text-white py-3 rounded-xl text-sm font-medium transition-all"
             >
-              Back to Dashboard
+              Return
             </button>
           </div>
         </form>
