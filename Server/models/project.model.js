@@ -10,12 +10,15 @@ const projectSchema = new mongoose.Schema(
     },
     title: {
       type: String,
+      required: true,
+      trim: true,
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
     members: [
       {
         user: {
@@ -25,11 +28,21 @@ const projectSchema = new mongoose.Schema(
         },
         role: {
           type: String,
-          enum: ["editor", "viewer"],
+          enum: ["co-leader", "editor", "viewer"],
           default: "viewer",
+        },
+        status: {
+          type: String,
+          enum: ["accepted", "pending"],
+          default: "accepted",
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
         },
       },
     ],
+
     files: [
       {
         name: {
@@ -38,12 +51,19 @@ const projectSchema = new mongoose.Schema(
         },
         content: {
           type: String,
+          default: "",
         },
         language: {
           type: String,
+          default: "javascript",
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
         },
       },
     ],
+
     blockedUsers: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -54,8 +74,14 @@ const projectSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+  },
 );
 
 export default mongoose.model("Project", projectSchema);

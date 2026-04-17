@@ -9,3 +9,8 @@ const FilesDiv = ({ filename }) => {
 };
 
 export default FilesDiv;
+
+// 1 2 2 3 1
+// 1 1 2 1 
+// n(a - b) , n(a + b)
+// c , d
