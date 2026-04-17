@@ -1,7 +1,5 @@
 import Project from "../models/project.model.js";
 
- 
-
 export const authorize = (allowedRoles) => {
   return async (req, res, next) => {
     try {

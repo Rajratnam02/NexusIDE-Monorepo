@@ -19,30 +19,6 @@ const projectSchema = new mongoose.Schema(
       required: true,
     },
 
-    members: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        role: {
-          type: String,
-          enum: ["co-leader", "editor", "viewer"],
-          default: "viewer",
-        },
-        status: {
-          type: String,
-          enum: ["accepted", "pending"],
-          default: "accepted",
-        },
-        joinedAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
-
     files: [
       {
         name: {
@@ -78,6 +54,12 @@ const projectSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    messages: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+      },
+    ],
   },
   {
     timestamps: true,
