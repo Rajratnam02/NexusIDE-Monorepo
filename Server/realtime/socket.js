@@ -32,10 +32,11 @@ export const initSocket = (server) => {
   return io;
 };
 
-
 export const getIO = () => {
   if (!io) {
-    throw new Error("Socket.io has not been initialized. Please call initSocket(server) first.");
+    throw new Error(
+      "Socket.io has not been initialized. Please call initSocket(server) first.",
+    );
   }
   return io;
 };

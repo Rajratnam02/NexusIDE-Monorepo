@@ -14,8 +14,10 @@ import {
   getAllProjects,
   getBlockedMembers,
   getFile,
+  getMyProjects,
   getPendingMembers,
   getProject,
+  getProjectDetails,
   joinProject,
   leaveProject,
   rejectJoin,
@@ -32,6 +34,8 @@ const projectRoutes = express.Router();
 
 // -- Core Project Routes --
 projectRoutes.post("/", protect, createProject);
+projectRoutes.get("/:roomId/details", protect,getProjectDetails);
+projectRoutes.get("/my-project", protect, getMyProjects);
 projectRoutes.get("/", protect, getAllProjects);
 projectRoutes.get("/:roomId", protect, getProject);
 
