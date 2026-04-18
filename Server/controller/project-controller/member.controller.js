@@ -1,4 +1,5 @@
 import projectModel from "../../models/project.model.js";
+import { getIO } from "../../realtime/socket.js";
 
 export const joinProject = async (req, res) => {
   try {
@@ -143,6 +144,13 @@ export const acceptJoin = async (req, res) => {
     }
 
     await req.project.save();
+
+    const io = getIO();
+    io.to(req.project.roomId).emit("project-event", {
+      type: "MEMBER_JOINED",
+      payload: { userId },
+    });
+    
     res.status(200).json({ success: true, message: "Join request accepted" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

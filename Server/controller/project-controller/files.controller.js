@@ -1,4 +1,5 @@
 import projectModel from "../../models/project.model.js";
+import { getIO } from "../../realtime/socket.js";
 
 export const createFile = async (req, res) => {
   try {
@@ -17,6 +18,12 @@ export const createFile = async (req, res) => {
 
     req.project.files.push(newFile);
     await req.project.save();
+
+    const io = getIO();
+    io.to(req.project.roomId).emit("project-event", {
+      type: "FILE_CREATED",
+      payload: { name, language, updatedAt: new Date() }
+    });
 
     res.status(201).json({ success: true, data: newFile });
   } catch (error) {
