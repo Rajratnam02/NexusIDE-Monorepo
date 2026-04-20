@@ -5,7 +5,7 @@ import fileRoutes from "./files.routes.js";
 const projectRoutes = express.Router();
 
 projectRoutes.use("/core", projectCoreRoutes);
-projectCoreRoutes.use("/member", memberManagementRoutes);
-projectCoreRoutes.use("/files", fileRoutes);
+projectRoutes.use("/member", memberManagementRoutes);
+projectRoutes.use("/files", fileRoutes);
 
 export default projectRoutes;

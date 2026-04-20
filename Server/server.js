@@ -14,7 +14,7 @@ initSocket(httpServer);
 
 app.use(express.json());
 
-app.use("/",appRoutes);
+app.use("/api",appRoutes);
 
 
 const port = process.env.PORT || 5000;

@@ -45,7 +45,7 @@ export const sendMessage = async (req, res) => {
     const populated = await newMessage.populate("sender", "name photo");
 
     const io = getIO();
-    io.to(roomId).emit("receive-chat", populated);
+    io.to(roomId).emit("RECEIVE_CHAT", populated);
 
     res.status(201).json({
       success: true,
@@ -88,7 +88,7 @@ export const deleteMessage = async (req, res) => {
     await messageModel.findByIdAndDelete(messageId);
 
     const io = getIO();
-    io.to(roomId).emit("message-deleted", messageId);
+    io.to(roomId).emit("MESSAGE_DELETED", messageId);
 
     return res.status(200).json({
       success: true,
@@ -109,7 +109,7 @@ export const clearProjectChat = async (req, res) => {
     });
 
     const io = getIO();
-    io.to(req.params.roomId).emit("chat-cleared");
+    io.to(req.params.roomId).emit("CHAT_CLEARED");
 
     return res.status(200).json({
       success: true,

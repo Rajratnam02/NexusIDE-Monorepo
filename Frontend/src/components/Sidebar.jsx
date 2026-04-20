@@ -2,9 +2,23 @@ import { Clock, Code2, Folder, LogOut, Settings, User } from "lucide-react";
 import React from "react";
 import SidebarButton from "./SidebarButton";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/authStore";
 
 const Sidebar = ({ selected, setSelected }) => {
   const navigate = useNavigate();
+
+  const logout = useAuthStore((state) => state.logout);
+
+  const clickHandler = async () => {
+    try {
+      console.log("Logout clicked");
+      await logout();
+      console.log("Logout successful");
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const generalClass =
     "border-gray-800 border-r w-70 fixed h-screen transition-all duration-500 justify-between flex flex-col";
@@ -14,11 +28,7 @@ const Sidebar = ({ selected, setSelected }) => {
   return (
     <div className={generalClass + " " + (closed ? closedClass : openClass)}>
       <div className="flex mx-5  flex-col">
-        {/* <div onClick={closeHandler} className='mt-10 flex items-center justify-end mr-5'>
-            <MoveLeft />
-          </div> */}
-
-        {/* LOGO */}
+        
         <div
           onClick={() => {
             navigate("/");
@@ -62,7 +72,7 @@ const Sidebar = ({ selected, setSelected }) => {
       </div>
 
       <div className="flex items-center px-10 cursor-pointer border-t border-gray-800  gap-3 text-gray-400 hover:text-red-400 transition-colors w-full py-4 text-sm">
-        <LogOut size={18} />
+        <LogOut onClick={clickHandler} size={18} />
         <p className="">Logout</p>
       </div>
     </div>
