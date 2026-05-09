@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { configDotenv } from "dotenv";
+import cors from "cors";
 import { initSocket } from "./realtime/socket.js";
 import appRoutes from "./routes/api.routes.js";
 import connectMongoose from "./config/db.config.js";
@@ -12,6 +13,10 @@ const app = express();
 const httpServer = createServer(app);
 initSocket(httpServer);
 
+app.use(cors({
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  credentials: true,
+}));
 app.use(express.json());
 
 app.use("/api",appRoutes);

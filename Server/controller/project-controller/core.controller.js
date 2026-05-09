@@ -14,7 +14,7 @@ export const createProject = async (req, res) => {
     const roomId = nanoid(10);
 
     const newProject = await projectModel.create({
-      name,
+      title: name,
       roomId,
       owner: req.user._id,
       members: [{ user: req.user._id, role: "owner" }],
@@ -149,9 +149,13 @@ export const updateProject = async (req, res) => {
       });
     }
 
+    const updateData = {};
+    if (name !== undefined) updateData.title = name;
+    if (isPublic !== undefined) updateData.isPublic = isPublic;
+
     const updatedProject = await projectModel.findByIdAndUpdate(
       projectId,
-      { name, isPublic },
+      updateData,
       { new: true },
     );
 

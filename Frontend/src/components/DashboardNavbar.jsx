@@ -1,10 +1,9 @@
-import { Search } from "lucide-react";
+import { Search, LogOut } from "lucide-react";
 import React from "react";
-import { useAuthStore } from "../stores/authStore";
+import { useAuthStore } from "../stores/AuthStore";
 
 const DashboardNavbar = () => {
-  const user = useAuthStore((state) => state.user);
-
+  const { user, logout } = useAuthStore();
 
   const getValidPhoto = () => {
     if (!user) return null;
@@ -30,29 +29,38 @@ const DashboardNavbar = () => {
         />
       </div>
 
-      {/* User Profile / Avatar */}
-      <div
-        className="h-9 w-9 mr-8 rounded-full overflow-hidden border border-blue-700 
-                   flex items-center justify-center bg-gray-800 text-white font-semibold"
-      >
-        {userPhoto ? (
-          <img
-            src={userPhoto}
-            alt="User avatar"
-            className="h-full w-full object-cover"
-            
-            onError={(e) => {
-              e.target.onerror = null; 
-              e.target.src = ""; 
-              e.target.parentElement.innerHTML = `<span>${user?.displayName?.charAt(0).toUpperCase() || "U"}</span>`;
-            }}
-          />
-        ) : (
-          <span className="text-sm">
-            {user?.displayName?.charAt(0)?.toUpperCase() || 
-             user?.email?.charAt(0)?.toUpperCase() || "U"}
-          </span>
-        )}
+      {/* User Profile / Avatar & Logout */}
+      <div className="flex items-center gap-4 mr-8">
+        <div
+          className="h-9 w-9 rounded-full overflow-hidden border border-blue-700 
+                     flex items-center justify-center bg-gray-800 text-white font-semibold"
+        >
+          {userPhoto ? (
+            <img
+              src={userPhoto}
+              alt="User avatar"
+              className="h-full w-full object-cover"
+              onError={(e) => {
+                e.target.onerror = null; 
+                e.target.src = ""; 
+                e.target.parentElement.innerHTML = `<span>${user?.displayName?.charAt(0).toUpperCase() || "U"}</span>`;
+              }}
+            />
+          ) : (
+            <span className="text-sm">
+              {user?.displayName?.charAt(0)?.toUpperCase() || 
+               user?.email?.charAt(0)?.toUpperCase() || "U"}
+            </span>
+          )}
+        </div>
+        
+        <button 
+          onClick={() => logout()} 
+          className="text-gray-400 hover:text-red-400 transition-colors p-2 rounded-lg hover:bg-gray-800"
+          title="Logout"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
     </div>
   );

@@ -2,16 +2,19 @@ import { create } from "zustand";
 
 export const useEditorStore = create((set, get) => ({
   activeFile: null,
-  openFiles: [],
+  openTabs: [],
+  editorTheme: "vs-dark",
   isSaving: false,
 
   setActiveFile: (file) => {
-    const { openFiles } = get();
-    const isAlreadyOpen = openFiles.find((f) => f.name === file.name);
+    const { openTabs } = get();
+    // Use _id if available, otherwise fallback to name
+    const identifier = file._id || file.name;
+    const isAlreadyOpen = openTabs.find((f) => (f._id || f.name) === identifier);
 
     if (!isAlreadyOpen) {
       set({
-        openFiles: [...openFiles, file],
+        openTabs: [...openTabs, file],
         activeFile: file,
       });
     } else {
@@ -19,39 +22,72 @@ export const useEditorStore = create((set, get) => ({
     }
   },
 
-  closeFile: (fileName) => {
-    const { openFiles, activeFile } = get();
-    const updatedTabs = openFiles.filter((f) => f.name !== fileName);
+  closeTab: (fileIdentifier) => {
+    const { openTabs, activeFile } = get();
+    // Filter out the file to be closed
+    const updatedTabs = openTabs.filter((f) => (f._id || f.name) !== fileIdentifier);
 
     let nextActive = activeFile;
 
-    if (activeFile?.name === fileName) {
-      nextActive =
-        updatedTabs.length > 0 ? updatedTabs[updatedTabs.length - 1] : null;
+    // If the closed tab was the active file, switch to the last available tab
+    if (activeFile && (activeFile._id || activeFile.name) === fileIdentifier) {
+      nextActive = updatedTabs.length > 0 ? updatedTabs[updatedTabs.length - 1] : null;
     }
 
     set({
-      openFiles: updatedTabs,
+      openTabs: updatedTabs,
       activeFile: nextActive,
     });
   },
 
-  updateFileLocal: (payload) => {
-    const { openFiles, activeFile } = get();
+  updateActiveFileContentLocal: (content) => {
+    const { activeFile, openTabs } = get();
+    if (!activeFile) return;
 
-    const updatedTabs = openFiles.map((f) =>
-      f.name === payload.oldName ? { ...f, name: payload.newName } : f,
+    // Update the content in the active file
+    const updatedActive = { ...activeFile, content };
+    
+    // Also update it in the openTabs array so it persists when switching tabs
+    const updatedTabs = openTabs.map((f) =>
+      (f._id || f.name) === (activeFile._id || activeFile.name) ? updatedActive : f
     );
 
-    let updatedActive = activeFile;
-    if (activeFile?.name === payload.oldName) {
-      updatedActive = { ...activeFile, name: payload.newName };
-    }
-
-    set({ openFiles: updatedTabs, activeFile: updatedActive });
+    set({
+      activeFile: updatedActive,
+      openTabs: updatedTabs,
+    });
   },
 
-  setSaving: (status) => set({ isSaving: status }),
+  setTheme: (themeName) => {
+    set({ editorTheme: themeName });
+  },
 
-  clearEditor: () => set({ activeFile: null, openFiles: [] }),
+  setIsSaving: (status) => {
+    set({ isSaving: status });
+  },
+
+  // Retain updateFileLocal for handling external file changes (e.g. rename from another user via socket)
+  updateFileLocal: (payload) => {
+    const { openTabs, activeFile } = get();
+
+    // Support both oldName/newName format and full object update payload
+    const fileIdentifier = payload.oldName || payload._id;
+    if (!fileIdentifier) return;
+
+    const updatedTabs = openTabs.map((f) => {
+      if ((f._id || f.name) === fileIdentifier) {
+        return { ...f, ...payload, name: payload.newName || payload.name || f.name };
+      }
+      return f;
+    });
+
+    let updatedActive = activeFile;
+    if (activeFile && (activeFile._id || activeFile.name) === fileIdentifier) {
+      updatedActive = { ...activeFile, ...payload, name: payload.newName || payload.name || activeFile.name };
+    }
+
+    set({ openTabs: updatedTabs, activeFile: updatedActive });
+  },
+
+  clearEditor: () => set({ activeFile: null, openTabs: [], isSaving: false }),
 }));

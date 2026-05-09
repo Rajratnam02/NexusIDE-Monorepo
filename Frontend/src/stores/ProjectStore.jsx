@@ -14,9 +14,9 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectCoreApi.post("/", { name });
-      set({ currentProject: response.data, loading: false });
+      set({ currentProject: response.data.data, loading: false });
       console.log("Success");
-      return response.data;
+      return response.data.data;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -28,7 +28,7 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectCoreApi.get("/my-project");
-      set({ myProjects: response.data, loading: false });
+      set({ myProjects: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -39,7 +39,7 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectCoreApi.get("/");
-      set({ publicProjects: response.data, loading: false });
+      set({ publicProjects: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -50,7 +50,7 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectCoreApi.get(`/${roomId}/details`);
-      set({ currentProject: response.data, loading: false });
+      set({ currentProject: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -61,7 +61,7 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectCoreApi.patch(`/${roomId}`, data);
-      set({ currentProject: response.data, loading: false });
+      set({ currentProject: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -84,7 +84,7 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectFileApi.get(`/${roomId}/files`);
-      set({ files: response.data, loading: false });
+      set({ files: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -95,8 +95,8 @@ export const useProjectStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectFileApi.post(`/${roomId}/files`, { name, language });
-      set((state) => ({ files: [...state.files, response.data], loading: false }));
-      return response.data;
+      set((state) => ({ files: [...state.files, response.data.data], loading: false }));
+      return response.data.data;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -124,7 +124,7 @@ export const useProjectStore = create((set) => ({
       set({ loading: true, error: null });
       const response = await projectFileApi.patch(`/${roomId}/files/${fileId}`, { name: newName });
       set((state) => ({
-        files: state.files.map((f) => f._id === fileId ? response.data : f),
+        files: state.files.map((f) => f._id === fileId ? response.data.data : f),
         loading: false
       }));
     } catch (error) {
@@ -138,7 +138,7 @@ export const useProjectStore = create((set) => ({
     try {
       const response = await projectFileApi.patch(`/${roomId}/files/${fileId}`, { content });
       set((state) => ({
-        files: state.files.map((f) => f._id === fileId ? response.data : f),
+        files: state.files.map((f) => f._id === fileId ? response.data.data : f),
       }));
     } catch (error) {
       set({ error: error.response?.data?.message || error.message });
