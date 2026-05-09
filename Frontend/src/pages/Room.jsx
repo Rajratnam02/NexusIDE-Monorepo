@@ -13,6 +13,8 @@ import { useLocation, useParams } from "react-router-dom";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { MonacoBinding } from "y-monaco";
+import { useSocketStore } from "../stores/SocketStore";
+import { useProjectStore } from "../stores/ProjectStore";
 
 const COLORS = [
   "#FF5733",
@@ -24,6 +26,9 @@ const COLORS = [
 ];
 
 const Room = () => {
+  
+  const connectSocket = useSocketStore((state) => state.connectSocket);
+  const disconnectSocket = useSocketStore((state) => state.disconnectSocket);
   const [theme, setTheme] = useState("vs-dark");
   const { roomId } = useParams();
   const location = useLocation();
@@ -38,6 +43,8 @@ const Room = () => {
   const [myColor] = useState(
     () => COLORS[Math.floor(Math.random() * COLORS.length)],
   );
+
+  const fetchFiles = useProjectStore((state) => state.fetchFiles);
 
   useEffect(() => {
     if (monaco) {
@@ -146,6 +153,23 @@ const Room = () => {
       if (styleEl) styleEl.remove();
     };
   }, [editor, roomId, userName, myColor]);
+
+  useEffect(() => {
+    if (roomId) {
+      connectSocket(roomId);
+    }
+    return () => {
+      disconnectSocket();
+    };
+  }, [roomId, connectSocket, disconnectSocket]);
+
+  useEffect(() => {
+    if (roomId) {
+      fetchFiles(roomId);
+    }
+  }, [roomId, fetchFiles]);
+  
+
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">

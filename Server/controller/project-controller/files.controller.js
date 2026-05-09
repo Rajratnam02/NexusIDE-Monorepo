@@ -34,14 +34,20 @@ export const createFile = async (req, res) => {
 };
 export const deleteFile = async (req, res) => {
   try {
-    const { fileName } = req.body;
+    const { fileId } = req.params;
 
-    req.project.files = req.project.files.filter((f) => f.name !== fileName);
+    const fileToDelete = req.project.files.find((f) => f._id.toString() === fileId);
+    if (!fileToDelete) {
+      return res.status(404).json({ success: false, message: "File not found" });
+    }
+
+    req.project.files = req.project.files.filter((f) => f._id.toString() !== fileId);
     await req.project.save();
-
-    getIO().to(req.project.roomId).emit("project-event", {
+    
+    const io = getIO();
+    io.to(req.project.roomId).emit("project-event", {
       type: "FILE_DELETED",
-      payload: { fileName },
+      payload: { fileId },
     });
 
     res
@@ -51,33 +57,42 @@ export const deleteFile = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 export const updateFile = async (req, res) => {
   try {
-    const { fileName, content, newName } = req.body;
+    const { fileId } = req.params;
+    const { content, name } = req.body;
 
-    const file = req.project.files.find((f) => f.name === fileName);
+    const file = req.project.files.find((f) => f._id.toString() === fileId);
     if (!file) {
       return res
         .status(404)
         .json({ success: false, message: "File not found" });
     }
 
+    const oldName = file.name;
+
     if (content !== undefined) file.content = content;
-    if (newName) file.name = newName;
+    if (name) file.name = name;
     await req.project.save();
-    getIO().to(req.project.roomId).emit("project-event", {
+    
+    const io = getIO();
+    io.to(req.project.roomId).emit("project-event", {
       type: "FILE_UPDATED",
       payload: { 
-        oldName: fileName, 
-        newName: newName || fileName, 
+        fileId: file._id,
+        oldName, 
+        newName: file.name, 
         updatedBy: req.user._id 
       }
     });
+    
     res.status(200).json({ success: true, data: file });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 export const getAllFiles = async (req, res) => {
   try {
     res.status(200).json({
@@ -88,11 +103,12 @@ export const getAllFiles = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 export const getFile = async (req, res) => {
   try {
-    const { fileName } = req.params;
+    const { fileId } = req.params;
 
-    const file = req.project.files.find((f) => f.name === fileName);
+    const file = req.project.files.find((f) => f._id.toString() === fileId);
     if (!file) {
       return res
         .status(404)

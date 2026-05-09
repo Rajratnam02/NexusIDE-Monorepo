@@ -5,14 +5,19 @@ import {
   Settings,
   Users,
   Send,
+  Plus,
 } from "lucide-react";
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import Messages from "./Messages";
 import Icons from "./Icons";
 import UserBox from "./UserBox";
 import FilesDiv from "./FilesDiv";
+import { useProjectStore } from "../stores/ProjectStore";
+import PopUps from "./PopUps";
 
 const RoomSidebar = ({ activeUsers }) => {
+  const { roomId } = useParams();
   const [expanded, setExpanded] = useState(false);
   const generalClass =
     "border-r border-gray-800 bg-[#0d0d0d] transition-all duration-300 flex flex-col items-center py-4 gap-6 shrink-0";
@@ -20,6 +25,54 @@ const RoomSidebar = ({ activeUsers }) => {
   const expandedClass = "w-64";
   const [active, setActive] = useState("files");
   const iconClass = `cursor-pointer transition-colors text-gray-600 group hover:text-gray-400 disabled:text-blue-400`;
+
+  const { files, createFile, renameFile, deleteFile } = useProjectStore();
+
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    type: null, // "create", "rename", "delete"
+    file: null,
+    inputValue: "",
+  });
+
+  const openModal = (type, file = null) => {
+    setModalState({
+      isOpen: true,
+      type,
+      file,
+      inputValue: type === "rename" ? file.name : "",
+    });
+  };
+
+  const closeModal = () => {
+    setModalState({ isOpen: false, type: null, file: null, inputValue: "" });
+  };
+
+  const handleModalSubmit = async (e) => {
+    e.preventDefault();
+    const { type, file, inputValue } = modalState;
+
+    try {
+      if (type === "create") {
+        if (!inputValue.trim()) return;
+        const ext = inputValue.split(".").pop();
+        let language = "javascript";
+        if (ext === "py") language = "python";
+        else if (ext === "cpp") language = "cpp";
+        else if (ext === "css") language = "css";
+        else if (ext === "html") language = "html";
+        await createFile(roomId, inputValue, language);
+      } else if (type === "rename") {
+        if (!inputValue.trim() || inputValue === file.name) return;
+        await renameFile(roomId, file._id, inputValue);
+      } else if (type === "delete") {
+        await deleteFile(roomId, file._id);
+      }
+      closeModal();
+    } catch (err) {
+      alert(`Failed to ${type} file`);
+    }
+  };
 
   const clickHandler = (name) => {
     setExpanded(true);
@@ -112,23 +165,37 @@ const RoomSidebar = ({ activeUsers }) => {
 
           <div className="flex flex-col flex-1 overflow-y-auto no-scrollbar">
             <div className="flex flex-col">
-              <button
-                onClick={() => {
-                  clickHandler("files");
-                }}
-                disabled={active == "files"}
-                name="files"
-                className={iconClass + " flex items-center gap-4 mb-4"}
-              >
-                <FilesIcon size={20} />
-                <span className="text-sm font-medium">Files</span>
-              </button>
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => {
+                    clickHandler("files");
+                  }}
+                  disabled={active == "files"}
+                  name="files"
+                  className={iconClass + " flex items-center gap-4"}
+                >
+                  <FilesIcon size={20} />
+                  <span className="text-sm font-medium">Files</span>
+                </button>
+                {active === "files" && (
+                  <button onClick={() => openModal("create")} className="text-gray-400 hover:text-white transition-colors">
+                    <Plus size={16} />
+                  </button>
+                )}
+              </div>
               {active == "files" && (
                 <div className="flex flex-col gap-3 pl-9 pb-6">
-                  {["Index.js", "App.js", "Style.css", "Main.jsx"].map(
-                    (filename) => (
-                      <FilesDiv filename={filename} />
-                    ),
+                  {files && files.map((file) => (
+                    <FilesDiv
+                      key={file._id}
+                      file={file}
+                      onRename={(f) => openModal("rename", f)}
+                      onDelete={(f) => openModal("delete", f)}
+                      onClick={() => console.log("File clicked:", file.name)}
+                    />
+                  ))}
+                  {(!files || files.length === 0) && (
+                    <span className="text-xs text-gray-500">No files found</span>
                   )}
                 </div>
               )}
@@ -201,6 +268,16 @@ const RoomSidebar = ({ activeUsers }) => {
           </div>
         </div>
       )}
+      
+      <PopUps 
+        isOpen={modalState.isOpen}
+        type={modalState.type}
+        file={modalState.file}
+        inputValue={modalState.inputValue}
+        setInputValue={(val) => setModalState({ ...modalState, inputValue: val })}
+        onClose={closeModal}
+        onSubmit={handleModalSubmit}
+      />
     </div>
   );
 };
