@@ -9,11 +9,7 @@ import Room from "./pages/Room";
 import Settings from "./pages/Settings";
 import { useAuthStore } from "./stores/authStore";
 
-/**
- * ProtectedRoute: The "Bouncer"
- * Prevents access to internal pages if the user is not logged in.
- * Handles the loading state to prevent crashes during Firebase initialization.
- */
+// Protected Routes 
 const ProtectedRoute = () => {
   const { user, loading } = useAuthStore();
 
@@ -30,8 +26,8 @@ const ProtectedRoute = () => {
 };
 
 const App = () => {
+  
   const listenToAuth = useAuthStore((state) => state.listenToAuth);
-
   useEffect(() => {
     const unsubscribe = listenToAuth();
         return () => {
@@ -40,14 +36,14 @@ const App = () => {
   }, [listenToAuth]);
 
   return (
-    <div className="bg-black min-h-screen selection:bg-blue-500/30">
+    <div className="bg-[#0A0A0A] min-h-screen ">
       <Routes>
-        {/* Public Routes - Accessible to everyone */}
+        {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Protected Routes - Only accessible if user is logged in */}
+        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/join" element={<JoinRoom />} />
@@ -55,7 +51,7 @@ const App = () => {
           <Route path="/settings" element={<Settings />} />
         </Route>
 
-        {/* Catch-all - Redirects unknown paths to landing or dashboard */}
+        {/* Everything else */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

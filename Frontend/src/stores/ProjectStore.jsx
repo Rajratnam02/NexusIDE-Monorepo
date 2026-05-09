@@ -1,71 +1,156 @@
 import { create } from "zustand";
-import { projectFileApi, projectCoreApi } from "../api/axios";
+import { projectCoreApi, projectFileApi } from "../axios/AxiosInstance";
 
 export const useProjectStore = create((set) => ({
-  project: null,
+  currentProject: null,
   files: [],
+  myProjects: [],
+  publicProjects: [],
   loading: false,
   error: null,
 
-  fetchProjectData: async (roomId) => {
-    set({ loading: true, error: null });
+  // Core API Functions
+  createProject: async (name) => {
     try {
-      const response = await projectCoreApi.get(`/${roomId}`);
-      set({ 
-        project: response.data.project, 
-        files: response.data.project.files, 
-        loading: false 
-      });
-    } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to load project", loading: false });
+      set({ loading: true, error: null });
+      const response = await projectCoreApi.post("/", { name });
+      set({ currentProject: response.data, loading: false });
+      console.log("Success");
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+      throw error;
     }
   },
 
- 
-  
-  addFileLocal: (newFile) => {
-    set((state) => ({
-      files: [...state.files, newFile]
-    }));
-  },
-
-  removeFileLocal: (fileName) => {
-    set((state) => ({
-      files: state.files.filter((f) => f.name !== fileName)
-    }));
-  },
-
-  updateFileLocal: (payload) => {
-    
-    set((state) => ({
-      files: state.files.map((f) => 
-        f.name === payload.oldName 
-          ? { ...f, name: payload.newName || f.name, content: payload.content ?? f.content } 
-          : f
-      )
-    }));
-  },
-
-
-
-  createFile: async (name, language) => {
+  fetchMyProjects: async () => {
     try {
-      const res = await projectFileApi.post("/create", { name, language });
-     
-      return res.data;
-    } catch (err) {
-      console.error("Creation error:", err);
-      throw err;
+      set({ loading: true, error: null });
+      const response = await projectCoreApi.get("/my-project");
+      set({ myProjects: response.data, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
     }
   },
 
-  deleteFile: async (fileName) => {
+  fetchAllProjects: async () => {
     try {
-      await projectFileApi.post("/delete", { fileName });
-    } catch (err) {
-      console.error("Delete error:", err);
+      set({ loading: true, error: null });
+      const response = await projectCoreApi.get("/");
+      set({ publicProjects: response.data, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
     }
   },
 
-  clearProject: () => set({ project: null, files: [], error: null })
-}));
+  fetchProjectDetails: async (roomId) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await projectCoreApi.get(`/${roomId}/details`);
+      set({ currentProject: response.data, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+    }
+  },
+
+  updateProject: async (roomId, data) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await projectCoreApi.patch(`/${roomId}`, data);
+      set({ currentProject: response.data, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+    }
+  },
+
+  deleteProject: async (roomId) => {
+    try {
+      set({ loading: true, error: null });
+      await projectCoreApi.delete(`/${roomId}`);
+      set({ currentProject: null, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+    }
+  },
+
+  // Files API Functions
+  fetchFiles: async (roomId) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await projectFileApi.get(`/${roomId}/files`);
+      set({ files: response.data, loading: false });
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+    }
+  },
+
+  createFile: async (roomId, name, language) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await projectFileApi.post(`/${roomId}/files`, { name, language });
+      set((state) => ({ files: [...state.files, response.data], loading: false }));
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+      throw error;
+    }
+  },
+
+  deleteFile: async (roomId, fileId) => {
+    try {
+      set({ loading: true, error: null });
+      await projectFileApi.delete(`/${roomId}/files/${fileId}`);
+      set((state) => ({
+        files: state.files.filter((f) => f._id !== fileId),
+        loading: false
+      }));
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+      throw error;
+    }
+  },
+
+  renameFile: async (roomId, fileId, newName) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await projectFileApi.patch(`/${roomId}/files/${fileId}`, { name: newName });
+      set((state) => ({
+        files: state.files.map((f) => f._id === fileId ? response.data : f),
+        loading: false
+      }));
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      console.log(error);
+      throw error;
+    }
+  },
+
+  saveFileContent: async (roomId, fileId, content) => {
+    try {
+      const response = await projectFileApi.patch(`/${roomId}/files/${fileId}`, { content });
+      set((state) => ({
+        files: state.files.map((f) => f._id === fileId ? response.data : f),
+      }));
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message });
+      console.log(error);
+      throw error;
+    }
+  },
+
+  // Local Modifiers (For Socket Updates)
+  addFileLocal: (file) => set((state) => ({ files: [...state.files, file] })),
+  removeFileLocal: (fileId) => set((state) => ({ files: state.files.filter((f) => f._id !== fileId) })),
+  updateFileLocal: (payload) => set((state) => ({
+    files: state.files.map((f) => f._id === payload._id ? { ...f, ...payload } : f)
+  })),
+}));

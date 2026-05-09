@@ -24,4 +24,4 @@ const createApi = (path) => {
 export const messageApi = createApi("message");
 export const projectCoreApi = createApi("project/core");
 export const projectMemberApi = createApi("project/member");
-export const projectFileApi = createApi("project/file");
+export const projectFileApi = createApi("project/files");
