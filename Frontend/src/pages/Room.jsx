@@ -11,10 +11,14 @@ import {
 } from "../components/Themes";
 import { useLocation, useParams } from "react-router-dom";
 import * as Y from "yjs";
-import { WebsocketProvider } from "y-websocket";
+import { SocketIOProvider } from "y-socket.io";
 import { MonacoBinding } from "y-monaco";
 import { useSocketStore } from "../stores/SocketStore";
 import { useProjectStore } from "../stores/ProjectStore";
+import { useEditorStore } from "../stores/EditorStore";
+import { useAuthStore } from "../stores/AuthStore";
+import { useMemberStore } from "../stores/MemberStore";
+import { X } from "lucide-react";
 
 const COLORS = [
   "#FF5733",
@@ -37,14 +41,50 @@ const Room = () => {
   const [editor, setEditor] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
 
+  const { user } = useAuthStore();
+  const { joinProject, requestJoin, cancelJoin } = useMemberStore();
+
   const [userName] = useState(
-    () => location.state?.name || `User-${Math.floor(Math.random() * 1000)}`,
+    () => user?.name || `User-${Math.floor(Math.random() * 1000)}`
   );
   const [myColor] = useState(
     () => COLORS[Math.floor(Math.random() * COLORS.length)],
   );
 
-  const fetchFiles = useProjectStore((state) => state.fetchFiles);
+  const { currentProject, fetchProjectDetails, loading: projectLoading } = useProjectStore();
+  const { activeFile, openTabs, setActiveFile, closeTab } = useEditorStore();
+
+  const [ydoc, setYdoc] = useState(null);
+  const [provider, setProvider] = useState(null);
+
+  useEffect(() => {
+    if (roomId) {
+      fetchProjectDetails(roomId);
+    }
+  }, [roomId, fetchProjectDetails]);
+
+  const isMember = currentProject?.members?.some(
+    (m) => user?.email && (m.user?.email === user.email || m.email === user.email)
+  );
+  
+  const hasRequested = currentProject?.requests?.some(
+    (req) => req.email === user?.email
+  );
+
+  const handleJoin = async () => {
+    const success = await joinProject(roomId);
+    if (success) fetchProjectDetails(roomId);
+  };
+
+  const handleRequest = async () => {
+    const success = await requestJoin(roomId);
+    if (success) fetchProjectDetails(roomId);
+  };
+
+  const handleCancelRequest = async () => {
+    const success = await cancelJoin(roomId);
+    if (success) fetchProjectDetails(roomId);
+  };
 
   useEffect(() => {
     if (monaco) {
@@ -56,20 +96,33 @@ const Room = () => {
     }
   }, [monaco]);
 
+  // 1. Setup Ydoc and SocketIO Provider (y-socket.io talks to our own server)
   useEffect(() => {
-    if (!editor) return;
+    if (!roomId || !isMember) return;
 
-    const ydoc = new Y.Doc();
-    const provider = new WebsocketProvider(
-      "wss://demos.yjs.dev/ws",
-      `nexus-ide-${roomId}`,
-      ydoc,
-    );
+    const SOCKET_URL = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+    const doc = new Y.Doc();
+    const prov = new SocketIOProvider(SOCKET_URL, `nexus-${roomId}`, doc, {
+      autoConnect: true,
+    });
 
-    provider.awareness.setLocalStateField("user", {
+    prov.awareness.setLocalStateField("user", {
       name: userName,
       color: myColor,
     });
+
+    setYdoc(doc);
+    setProvider(prov);
+
+    return () => {
+      prov.disconnect();
+      doc.destroy();
+    };
+  }, [roomId, isMember, userName, myColor]);
+
+  // 2. Setup Dynamic Cursors
+  useEffect(() => {
+    if (!provider) return;
 
     const dynamicCursor = () => {
       const states = Array.from(provider.awareness.getStates().entries());
@@ -136,7 +189,25 @@ const Room = () => {
     provider.awareness.on("change", dynamicCursor);
     dynamicCursor();
 
-    const ytext = ydoc.getText("monaco");
+    return () => {
+      provider.awareness.off("change", dynamicCursor);
+      const styleEl = document.getElementById("y-monaco-dynamic-cursors");
+      if (styleEl) styleEl.remove();
+    };
+  }, [provider]);
+
+  
+  useEffect(() => {
+    if (!ydoc || !provider || !editor || !activeFile) return;
+
+    // Use a unique text identifier for each file in Yjs
+    const ytext = ydoc.getText(activeFile._id);
+    
+    // Optional: if the document is totally empty locally and we have DB content, seed it
+    if (ytext.toString() === "" && activeFile.content) {
+      ytext.insert(0, activeFile.content);
+    }
+
     const binding = new MonacoBinding(
       ytext,
       editor.getModel(),
@@ -145,30 +216,69 @@ const Room = () => {
     );
 
     return () => {
-      provider.awareness.off("change", dynamicCursor);
       binding.destroy();
-      provider.disconnect();
-      ydoc.destroy();
-      const styleEl = document.getElementById("y-monaco-dynamic-cursors");
-      if (styleEl) styleEl.remove();
     };
-  }, [editor, roomId, userName, myColor]);
+  }, [ydoc, provider, editor, activeFile]);
 
   useEffect(() => {
-    if (roomId) {
+    if (roomId && isMember) {
       connectSocket(roomId);
     }
     return () => {
-      disconnectSocket();
+      if (isMember) disconnectSocket();
     };
-  }, [roomId, connectSocket, disconnectSocket]);
+  }, [roomId, isMember, connectSocket, disconnectSocket]);
 
+  const fetchFiles = useProjectStore((state) => state.fetchFiles);
   useEffect(() => {
-    if (roomId) {
+    if (roomId && isMember) {
       fetchFiles(roomId);
     }
-  }, [roomId, fetchFiles]);
+  }, [roomId, isMember, fetchFiles]);
   
+
+  if (projectLoading || !currentProject) {
+    return <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center text-white">Loading...</div>;
+  }
+
+  if (!isMember) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex flex-col items-center justify-center text-white">
+        <div className="bg-[#0d0d0d] p-8 rounded-lg border border-gray-800 text-center max-w-md w-full">
+          <h2 className="text-2xl font-bold mb-2">{currentProject.title}</h2>
+          <p className="text-gray-400 mb-6">You are not a member of this project.</p>
+          
+          {currentProject.isPublic ? (
+            <button 
+              onClick={handleJoin}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+            >
+              Join Project
+            </button>
+          ) : hasRequested ? (
+            <div className="space-y-4">
+              <div className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-4 py-3 rounded text-sm">
+                Your request to join is pending approval.
+              </div>
+              <button 
+                onClick={handleCancelRequest}
+                className="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded transition-colors"
+              >
+                Cancel Request
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={handleRequest}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+            >
+              Request Access
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -179,21 +289,47 @@ const Room = () => {
         <RoomSidebar activeUsers={activeUsers} />
 
         <div className="flex flex-col flex-1 border-l border-gray-800 min-w-0">
-          <div className="flex-1 w-full relative h-full">
-            <Editor
-              height={"100%"}
-              width={"100%"}
-              theme={theme}
-              defaultLanguage="cpp"
-              onMount={(editor) => setEditor(editor)}
-              options={{
-                padding: { top: 16 },
-                scrollbar: { vertical: "hidden", horizontal: "hidden" },
-                automaticLayout: true,
-                smoothScrolling: true,
-                cursorSmoothCaretAnimation: true,
-              }}
-            />
+          <div className="flex bg-[#0d0d0d] border-b border-gray-800 overflow-x-auto no-scrollbar">
+            {openTabs.map((tab) => (
+              <div 
+                key={tab._id} 
+                className={`flex items-center gap-2 px-4 py-2 cursor-pointer border-r border-gray-800 text-sm ${activeFile?._id === tab._id ? 'bg-[#1a1a1a] text-white border-t-2 border-t-blue-500' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]/50'}`}
+                onClick={() => setActiveFile(tab)}
+              >
+                <span>{tab.name}</span>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    closeTab(tab._id || tab.name); 
+                  }} 
+                  className="hover:bg-gray-700 rounded-md p-0.5 ml-1 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="flex-1 w-full relative h-full bg-[#1a1a1a]">
+            {activeFile ? (
+              <Editor
+                height={"100%"}
+                width={"100%"}
+                theme={theme}
+                language={activeFile.language || "javascript"}
+                onMount={(editor) => setEditor(editor)}
+                options={{
+                  padding: { top: 16 },
+                  scrollbar: { vertical: "hidden", horizontal: "hidden" },
+                  automaticLayout: true,
+                  smoothScrolling: true,
+                  cursorSmoothCaretAnimation: true,
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Select a file from the sidebar to start coding
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { messageApi } from "../axios/AxiosInstance";
 
-export const useChatStore = create((set, get) => ({
+export const useChatStore = create((set) => ({
   messages: [],
   loading: false,
   error: null,
@@ -12,7 +12,7 @@ export const useChatStore = create((set, get) => ({
     try {
       set({ loading: true, error: null });
       const response = await messageApi.get(`/${roomId}`);
-      set({ messages: response.data, loading: false });
+      set({ messages: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);

@@ -46,12 +46,6 @@ export const authorize = (allowedRoles) => {
           });
       }
 
-      if (membership.status !== "accepted") {
-        return res.status(403).json({
-          message: `Access denied: Your membership is currently ${membership.status}`,
-        });
-      }
-
       if (!allowedRoles.includes(membership.role)) {
         return res.status(403).json({
           message: `Forbidden: This action requires one of the following roles: ${allowedRoles.join(", ")}`,

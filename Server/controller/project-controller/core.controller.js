@@ -44,7 +44,8 @@ export const getProjectDetails = async (req, res) => {
     const project = await projectModel
       .findOne({ roomId })
       .populate("owner", "name photo email")
-      .populate("members.user", "name photo email");
+      .populate("members.user", "name photo email")
+      .populate("requests", "email");
 
     if (!project) {
       return res

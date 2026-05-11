@@ -24,6 +24,7 @@ export const useSocketStore = create((set, get) => ({
 
     socketInstance.on("connect", () => {
       set({ socket: socketInstance, isConnected: true });
+      socketInstance.emit("join-room", roomId);
       console.log("Connected to Nexus Real-time Engine");
     });
 

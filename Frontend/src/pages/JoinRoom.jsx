@@ -6,37 +6,16 @@ import Logo from "../../public/Logo";
 const JoinRoom = () => {
   const navigate = useNavigate();
   const [roomIdValue, setRoomIdValue] = useState("");
-  const [name, setName] = useState("");
-
-  const newRoomId = () => {
-    const characters = "abcdefghijklmnopqrstuvwxyz1234567890";
-    const generatePart = () => {
-      let a = "";
-      for (let i = 0; i < 3; i++) {
-        a = a + characters[Math.floor(Math.random() * 36)];
-      }
-      return a;
-    };
-    const roomId = `${generatePart()}-${generatePart()}-${generatePart()}`;
-
-    setRoomIdValue(roomId);
-  };
 
   const changeHandler = (e) => {
     setRoomIdValue(e.target.value);
   };
 
-  const changeName = (e) => {
-    setName(e.target.value);
-  };
-
   const enterRoom = (e) => {
     e.preventDefault();
 
-    if (name && roomIdValue) {
-      navigate(`/room/${roomIdValue}`, {
-        state: { name },
-      });
+    if (roomIdValue.trim()) {
+      navigate(`/room/${roomIdValue.trim()}`);
     }
   };
 
@@ -62,33 +41,12 @@ const JoinRoom = () => {
               <input
                 onChange={changeHandler}
                 value={roomIdValue}
-                className="flex-1 bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
+                className="w-full bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
                 type="text"
-                placeholder="e.g. x8j-2kf-9ps"
+                placeholder="Enter the Project Room ID..."
                 required
               />
-              <button
-                onClick={newRoomId}
-                type="button"
-                className="px-4 bg-[#1a1a1a] border border-gray-800 hover:border-blue-500/50 rounded-xl text-xs font-bold text-blue-400 uppercase tracking-wider transition-all active:scale-95"
-              >
-                New
-              </button>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-              Your Name
-            </label>
-            <input
-              onChange={changeName}
-              value={name}
-              className="w-full bg-[#0A0A0A] border border-gray-800 rounded-xl px-4 py-3 focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 outline-none text-white font-mono placeholder:text-slate-700 transition-all"
-              type="text"
-              placeholder="How should others see you?"
-              required
-            />
           </div>
 
           <div className="pt-4 space-y-3">

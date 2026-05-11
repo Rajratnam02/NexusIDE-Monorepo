@@ -3,8 +3,8 @@ import { getIO } from "../../realtime/socket.js";
 
 export const joinProject = async (req, res) => {
   try {
-    const { projectId } = req.params;
-    const project = await projectModel.findById(projectId);
+    const { roomId } = req.params;
+    const project = await projectModel.findOne({ roomId });
 
     if (!project) {
       return res
@@ -32,8 +32,8 @@ export const joinProject = async (req, res) => {
 
 export const leaveProject = async (req, res) => {
   try {
-    const { projectId } = req.params;
-    const project = await projectModel.findById(projectId);
+    const { roomId } = req.params;
+    const project = await projectModel.findOne({ roomId });
 
     if (!project) {
       return res
@@ -63,8 +63,12 @@ export const leaveProject = async (req, res) => {
 
 export const requestJoin = async (req, res) => {
   try {
-    const { projectId } = req.params;
-    const project = await projectModel.findById(projectId);
+    const { roomId } = req.params;
+    const project = await projectModel.findOne({ roomId });
+
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
 
     if (!project.requests.includes(req.user._id)) {
       project.requests.push(req.user._id);
@@ -79,8 +83,12 @@ export const requestJoin = async (req, res) => {
 
 export const cancelJoin = async (req, res) => {
   try {
-    const { projectId } = req.params;
-    const project = await projectModel.findById(projectId);
+    const { roomId } = req.params;
+    const project = await projectModel.findOne({ roomId });
+
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
 
     project.requests = project.requests.filter(
       (id) => id.toString() !== req.user._id.toString(),
@@ -95,7 +103,7 @@ export const cancelJoin = async (req, res) => {
 
 export const blockUser = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     req.project.members = req.project.members.filter(
       (m) => m.user.toString() !== userId,
@@ -115,7 +123,7 @@ export const blockUser = async (req, res) => {
 };
 export const unblockUser = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     req.project.blockedUsers = req.project.blockedUsers.filter(
       (id) => id.toString() !== userId,
@@ -130,7 +138,7 @@ export const unblockUser = async (req, res) => {
 
 export const acceptJoin = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     req.project.requests = req.project.requests.filter(
       (id) => id.toString() !== userId,
@@ -159,7 +167,7 @@ export const acceptJoin = async (req, res) => {
 
 export const rejectJoin = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     req.project.requests = req.project.requests.filter(
       (id) => id.toString() !== userId,
@@ -250,7 +258,7 @@ export const addMembers = async (req, res) => {
 
 export const removeMembers = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     if (userId === req.project.owner.toString()) {
       return res
@@ -273,7 +281,8 @@ export const removeMembers = async (req, res) => {
 
 export const changeRole = async (req, res) => {
   try {
-    const { userId, newRole } = req.body;
+    const { userId } = req.params;
+    const { newRole } = req.body;
 
     const member = req.project.members.find(
       (m) => m.user.toString() === userId,

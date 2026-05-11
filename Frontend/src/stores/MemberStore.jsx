@@ -14,7 +14,7 @@ export const useMemberStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectMemberApi.get(`/${roomId}/members`);
-      set({ members: response.data, loading: false });
+      set({ members: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -25,7 +25,7 @@ export const useMemberStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectMemberApi.get(`/${roomId}/pending`);
-      set({ pendingRequests: response.data, loading: false });
+      set({ pendingRequests: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -36,7 +36,7 @@ export const useMemberStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await projectMemberApi.get(`/${roomId}/blocked`);
-      set({ blockedUsers: response.data, loading: false });
+      set({ blockedUsers: response.data.data, loading: false });
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
@@ -48,9 +48,11 @@ export const useMemberStore = create((set) => ({
       set({ loading: true, error: null });
       await projectMemberApi.post(`/${roomId}/join`);
       set({ loading: false });
+      return true;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
+      return false;
     }
   },
 
@@ -70,9 +72,11 @@ export const useMemberStore = create((set) => ({
       set({ loading: true, error: null });
       await projectMemberApi.post(`/${roomId}/request`);
       set({ loading: false });
+      return true;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
+      return false;
     }
   },
 
@@ -81,9 +85,11 @@ export const useMemberStore = create((set) => ({
       set({ loading: true, error: null });
       await projectMemberApi.post(`/${roomId}/cancel`);
       set({ loading: false });
+      return true;
     } catch (error) {
       set({ error: error.response?.data?.message || error.message, loading: false });
       console.log(error);
+      return false;
     }
   },
 

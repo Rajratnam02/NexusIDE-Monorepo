@@ -12,6 +12,10 @@ import {
   rejectJoin,
   removeMembers,
   unblockUser,
+  joinProject,
+  leaveProject,
+  requestJoin,
+  cancelJoin,
 } from "../../controller/project-controller/member.controller.js";
 
 const memberManagementRoutes = express.Router();
@@ -19,7 +23,7 @@ const memberManagementRoutes = express.Router();
 memberManagementRoutes.get(
   "/:roomId/members",
   protect,
-  authorize(["owner", "co-leader"]),
+  authorize(["owner", "co-leader", "editor", "viewer"]),
   getAllMembers,
 );
 memberManagementRoutes.get(
@@ -33,6 +37,28 @@ memberManagementRoutes.get(
   protect,
   authorize(["owner", "co-leader"]),
   getBlockedMembers,
+);
+
+
+memberManagementRoutes.post(
+  "/:roomId/join",
+  protect,
+  joinProject,
+);
+memberManagementRoutes.post(
+  "/:roomId/leave",
+  protect,
+  leaveProject,
+);
+memberManagementRoutes.post(
+  "/:roomId/request",
+  protect,
+  requestJoin,
+);
+memberManagementRoutes.post(
+  "/:roomId/cancel",
+  protect,
+  cancelJoin,
 );
 
 memberManagementRoutes.post(
