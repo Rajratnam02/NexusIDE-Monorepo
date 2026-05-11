@@ -104,10 +104,10 @@ export const getAllProjects = async (req, res) => {
 
 export const getProject = async (req, res) => {
   try {
-    const { projectId } = req.params;
+    const { roomId } = req.params;
 
     const project = await projectModel
-      .findById(projectId)
+      .findOne({ roomId })
       .populate("owner", "name photo email")
       .populate("members.user", "name photo email");
 
@@ -132,10 +132,10 @@ export const getProject = async (req, res) => {
 
 export const updateProject = async (req, res) => {
   try {
-    const { projectId } = req.params;
+    const { roomId } = req.params;
     const { name, isPublic } = req.body;
 
-    const project = await projectModel.findById(projectId);
+    const project = await projectModel.findOne({ roomId });
 
     if (!project) {
       return res
@@ -143,19 +143,12 @@ export const updateProject = async (req, res) => {
         .json({ success: false, message: "Project not found" });
     }
 
-    if (project.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Only owners can update project settings",
-      });
-    }
-
     const updateData = {};
     if (name !== undefined) updateData.title = name;
     if (isPublic !== undefined) updateData.isPublic = isPublic;
 
-    const updatedProject = await projectModel.findByIdAndUpdate(
-      projectId,
+    const updatedProject = await projectModel.findOneAndUpdate(
+      { roomId },
       updateData,
       { new: true },
     );
@@ -171,9 +164,9 @@ export const updateProject = async (req, res) => {
 
 export const deleteProject = async (req, res) => {
   try {
-    const { projectId } = req.params;
+    const { roomId } = req.params;
 
-    const project = await projectModel.findById(projectId);
+    const project = await projectModel.findOne({ roomId });
 
     if (!project) {
       return res
@@ -187,7 +180,7 @@ export const deleteProject = async (req, res) => {
         .json({ success: false, message: "Only owners can delete projects" });
     }
 
-    await projectModel.findByIdAndDelete(projectId);
+    await projectModel.findOneAndDelete({ roomId });
 
     res.status(200).json({
       success: true,

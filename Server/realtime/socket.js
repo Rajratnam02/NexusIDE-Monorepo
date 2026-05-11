@@ -6,7 +6,10 @@ let io;
 
 export const initSocket = (server) => {
   io = new Server(server, {
-    cors: { origin: "*" },
+    cors: { 
+      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      credentials: true
+    },
   });
 
   // Yjs document sync via y-socket.io (no auth required — room namespaced per file)
