@@ -7,7 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import JoinRoom from "./pages/JoinRoom";
 import Room from "./pages/Room";
 import Settings from "./pages/Settings";
-import { useAuthStore } from "./stores/authStore";
+import { useAuthStore } from "./stores/AuthStore";
+
 
 // Protected Routes 
 const ProtectedRoute = () => {
