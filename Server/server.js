@@ -25,7 +25,7 @@ const httpServer = createServer(app);
 // Initialize Socket.IO
 initSocket(httpServer);
 
-// Trust proxy 
+// Trust proxy
 app.set("trust proxy", 1);
 
 // Security middleware
@@ -45,7 +45,7 @@ app.use(morgan("combined"));
 
 // Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   message: {
     success: false,
@@ -79,6 +79,14 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Handle unknown routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
@@ -86,14 +94,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     success: false,
     message: err.message || "Something went wrong!",
-  });
-});
-
-// Handle unknown routes
-app.use("*", (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
   });
 });
 
