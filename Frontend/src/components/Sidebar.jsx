@@ -2,7 +2,7 @@ import { Clock, Code2, Folder, LogOut, Settings, User } from "lucide-react";
 import React from "react";
 import SidebarButton from "./SidebarButton";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../stores/authStore";
+import { useAuthStore } from "../stores/AuthStore";
 
 const Sidebar = ({ selected, setSelected }) => {
   const navigate = useNavigate();

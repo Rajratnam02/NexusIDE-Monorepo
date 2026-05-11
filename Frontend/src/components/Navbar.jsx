@@ -1,6 +1,6 @@
 import { Code2 } from "lucide-react";
 import React from "react";
-import { useAuthStore } from "../stores/authStore";
+import { useAuthStore } from "../stores/AuthStore";
 import LoggedOut from "./LoggedOut";
 import LoggedIn from "./LoggedIn";
 
