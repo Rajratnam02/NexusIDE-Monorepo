@@ -282,59 +282,164 @@ const Room = () => {
 
 
   return (
-    <div className="min-h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
-      <RoomNavbar theme={theme} setTheme={setTheme} />
+  <div className="min-h-screen bg-[#1a1a1a] flex flex-col overflow-hidden">
 
-      <div className="flex-1 flex">
-        <RoomSidebar activeUsers={activeUsers} />
+    <RoomNavbar
+      theme={theme}
+      setTheme={setTheme}
+    />
 
-        <div className="flex flex-col flex-1 border-l border-gray-800 min-w-0">
-          <div className="flex bg-[#0d0d0d] border-b border-gray-800 overflow-x-auto no-scrollbar">
-            {openTabs.map((tab) => (
-              <div 
-                key={tab._id} 
-                className={`flex items-center gap-2 px-4 py-2 cursor-pointer border-r border-gray-800 text-sm ${activeFile?._id === tab._id ? 'bg-[#1a1a1a] text-white border-t-2 border-t-blue-500' : 'text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]/50'}`}
-                onClick={() => setActiveFile(tab)}
-              >
-                <span>{tab.name}</span>
-                <button 
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    closeTab(tab._id || tab.name); 
-                  }} 
-                  className="hover:bg-gray-700 rounded-md p-0.5 ml-1 transition-colors"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-          <div className="flex-1 w-full relative h-full bg-[#1a1a1a]">
-            {activeFile ? (
-              <Editor
-                height={"100%"}
-                width={"100%"}
-                theme={theme}
-                language={activeFile.language || "javascript"}
-                onMount={(editor) => setEditor(editor)}
-                options={{
-                  padding: { top: 16 },
-                  scrollbar: { vertical: "hidden", horizontal: "hidden" },
-                  automaticLayout: true,
-                  smoothScrolling: true,
-                  cursorSmoothCaretAnimation: true,
+    <div className="flex flex-1 min-h-0 overflow-hidden">
+
+      <RoomSidebar activeUsers={activeUsers} />
+
+      <div
+        className="
+          flex
+          flex-col
+          flex-1
+          min-w-0
+          min-h-0
+          border-l
+          border-gray-800
+        "
+      >
+
+        {/* Tabs */}
+        <div
+          className="
+            flex
+            bg-[#0d0d0d]
+            border-b
+            border-gray-800
+            overflow-x-auto
+            whitespace-nowrap
+            no-scrollbar
+          "
+        >
+
+          {openTabs.map((tab) => (
+            <div
+              key={tab._id}
+              className={`
+                flex
+                items-center
+                shrink-0
+                gap-2
+                px-3 sm:px-4
+                py-2
+                cursor-pointer
+                border-r
+                border-gray-800
+                text-xs sm:text-sm
+
+                ${
+                  activeFile?._id === tab._id
+                    ? "bg-[#1a1a1a] text-white border-t-2 border-t-blue-500"
+                    : "text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]/50"
+                }
+              `}
+              onClick={() => setActiveFile(tab)}
+            >
+
+              <span className="truncate max-w-[120px] sm:max-w-none">
+                {tab.name}
+              </span>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeTab(tab._id || tab.name);
                 }}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                Select a file from the sidebar to start coding
-              </div>
-            )}
-          </div>
+                className="
+                  hover:bg-gray-700
+                  rounded-md
+                  p-0.5
+                  ml-1
+                  transition-colors
+                  shrink-0
+                "
+              >
+                <X size={14} />
+              </button>
+
+            </div>
+          ))}
+
         </div>
+
+        {/* Editor */}
+        <div
+          className="
+            flex-1
+            relative
+            min-h-0
+            w-full
+            bg-[#1a1a1a]
+          "
+        >
+
+          {activeFile ? (
+            <Editor
+              height="100%"
+              width="100%"
+              theme={theme}
+              language={
+                activeFile.language ||
+                "javascript"
+              }
+              onMount={(editor) =>
+                setEditor(editor)
+              }
+              options={{
+                padding: { top: 16 },
+
+                scrollbar: {
+                  vertical: "hidden",
+                  horizontal: "hidden",
+                },
+
+                automaticLayout: true,
+                smoothScrolling: true,
+                cursorSmoothCaretAnimation: true,
+
+                minimap: {
+                  enabled: false,
+                },
+
+                wordWrap: "on",
+
+                fontSize:
+                  window.innerWidth < 640
+                    ? 12
+                    : 14,
+              }}
+            />
+          ) : (
+            <div
+              className="
+                flex
+                items-center
+                justify-center
+                h-full
+                text-gray-500
+                text-center
+                px-6
+              "
+            >
+              Select a file from the
+              sidebar to start coding
+            </div>
+          )}
+
+        </div>
+
       </div>
+
     </div>
-  );
+
+  </div>
+);
 };
 
 export default Room;

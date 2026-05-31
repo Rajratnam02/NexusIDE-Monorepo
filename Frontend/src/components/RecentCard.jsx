@@ -1,17 +1,16 @@
 import {
   ChevronRight,
   Clock,
-  Clock1,
   Edit3,
   GitBranch,
   GitFork,
-  InfoIcon,
   PlayCircle,
   Plus,
   ShieldCheck,
   Trash2,
   UserPlus,
 } from "lucide-react";
+
 import React from "react";
 
 const RecentCard = ({ data }) => {
@@ -36,47 +35,70 @@ const RecentCard = ({ data }) => {
     RENAMED: <Edit3 size={18} />,
     FORKED: <GitFork size={18} />,
   };
+
   const icon = data.type;
-  const generalClass =
-    "p-5 h-fit rounded-2xl absolute -translate-x-1/2 translate-y-1/2 border-2 shadow-xl transition-all duration-300";
 
   return (
-    <div className="border-l w-full  flex relative  first:mt-10 border-blue-950 last:border-0 last:[&_.child]:block ">
-      <div className={generalClass + " " + iconClass[icon]}>
+    <div className="relative border-l border-blue-950 pl-8 sm:pl-12 first:mt-6 last:border-0">
+      {/* Timeline Icon */}
+      <div
+        className={`
+          absolute
+          left-0
+          top-8
+          -translate-x-1/2
+
+          p-4
+          rounded-2xl
+          border-2
+          shadow-xl
+          transition-all
+
+          ${iconClass[icon]}
+        `}
+      >
         {activityIcons[icon]}
       </div>
-      <div className="child hidden absolute  top-0 left-0 h-8  w-px bg-blue-950 border-blue-950 "></div>
-      <div className="bg-[#111111] border border-gray-800/50 my-5 rounded-2xl p-5 hover:border-blue-500/30 transition-all cursor-default flex-1 ml-15 mr-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+
+      {/* Card */}
+      <div className="bg-[#111111] border border-gray-800/50 my-5 rounded-2xl p-5 hover:border-blue-500/30 transition-all flex-1">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          {/* LEFT */}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="font-bold text-gray-100">{data.user}</span>
-              <span className="text-gray-500 text-xs tracking-wide uppercase font-bold">
+
+              <span className="text-gray-500 text-xs uppercase font-bold">
                 {data.type}
               </span>
-              <span className="text-blue-400 font-mono text-sm hover:underline cursor-pointer">
+
+              <span className="text-blue-400 font-mono text-sm hover:underline cursor-pointer break-all">
                 #{data.project}
               </span>
             </div>
 
-            <p className="text-gray-400 text-sm font-mono bg-black/30 px-3 py-1.5 rounded-lg border border-gray-800/50 mt-2">
+            <p className="text-gray-400 text-sm font-mono bg-black/30 px-3 py-2 rounded-lg border border-gray-800/50 break-words">
               <span className="text-green-500 mr-2">$</span>
-              &nbsp;{data.description}
+
+              {data.description}
             </p>
           </div>
-          <div className="flex items-center gap-4 text-right">
+
+          {/* RIGHT */}
+          <div className="flex items-center justify-between lg:justify-end gap-4 shrink-0">
             <div className="flex flex-col items-end">
-              <div className="flex items-center gap-1.5 text-gray-600">
+              <div className="flex items-center gap-1 text-gray-600">
                 <Clock size={12} />
-                <p className="text-[10px] font-bold uppercase tracking-widest">
+
+                <p className="text-[10px] uppercase font-bold tracking-widest">
                   {data.time}
                 </p>
               </div>
             </div>
 
-            <div className="p-2 hover:bg-gray-800 rounded-lg text-gray-600 hover:text-white transition-colors">
+            <button className="p-2 hover:bg-gray-800 rounded-lg text-gray-600 hover:text-white transition-colors">
               <ChevronRight size={18} />
-            </div>
+            </button>
           </div>
         </div>
       </div>

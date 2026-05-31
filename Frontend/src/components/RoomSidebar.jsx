@@ -24,10 +24,13 @@ import { useMemberStore } from "../stores/MemberStore";
 const RoomSidebar = ({ activeUsers }) => {
   const { roomId } = useParams();
   const [expanded, setExpanded] = useState(false);
-  const generalClass =
-    "border-r border-gray-800 bg-[#0d0d0d] transition-all duration-300 flex flex-col items-center py-4 gap-6 shrink-0";
-  const nonExpandedClass = "w-12";
-  const expandedClass = "w-64";
+  const nonExpandedClass = "w-12 md:w-14";
+
+  const generalClass = `
+  border-r border-gray-800 bg-[#0d0d0d] transition-all duration-300 flex flex-col items-center py-3 sm:py-4 gap-5 sm:gap-6 shrink-0 overflow-hidden`;
+
+  const expandedClass = "w-[260px] sm:w-[300px] md:w-72";
+
   const [active, setActive] = useState("files");
   const iconClass = `cursor-pointer transition-colors text-gray-600 group hover:text-gray-400 disabled:text-blue-400`;
 
@@ -88,7 +91,14 @@ const RoomSidebar = ({ activeUsers }) => {
     setActive(name);
   };
 
-  const { members, pendingRequests, fetchMembers, fetchPendingRequests, acceptJoin, rejectJoin } = useMemberStore();
+  const {
+    members,
+    pendingRequests,
+    fetchMembers,
+    fetchPendingRequests,
+    acceptJoin,
+    rejectJoin,
+  } = useMemberStore();
 
   useEffect(() => {
     fetchMembers(roomId);
@@ -99,10 +109,10 @@ const RoomSidebar = ({ activeUsers }) => {
 
   useEffect(() => {
     fetchMessages(roomId);
-  },[roomId]);
+  }, [roomId]);
 
   const chatMessages = useChatStore((state) => state.messages);
-  
+
   const [msgInput, setMsgInput] = useState("");
 
   const handleSend = async (e) => {
@@ -154,7 +164,7 @@ const RoomSidebar = ({ activeUsers }) => {
       )}
 
       {expanded && (
-        <div className="text-white h-full flex flex-col w-full px-6 py-2">
+        <div className="text-white h-full flex flex-col w-full px-3 sm:px-5 md:px-6 py-2 overflow-hidden">
           <div className="flex mb-8">
             <button
               onClick={() => setExpanded(false)}
@@ -165,7 +175,7 @@ const RoomSidebar = ({ activeUsers }) => {
             </button>
           </div>
 
-          <div className="flex flex-col flex-1 overflow-y-auto no-scrollbar">
+          <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
             <div className="flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <button
@@ -189,7 +199,7 @@ const RoomSidebar = ({ activeUsers }) => {
                 )}
               </div>
               {active == "files" && (
-                <div className="flex flex-col gap-3 pl-9 pb-6">
+                <div className="flex flex-col gap-3 pl-4 sm:pl-7 md:pl-9 pb-6">
                   {files &&
                     files.map((file) => (
                       <FilesDiv
@@ -232,45 +242,85 @@ const RoomSidebar = ({ activeUsers }) => {
                 )}
               </div>
               {active == "users" && (
-                <div className="flex flex-col gap-4 pl-9 pb-6 pr-4">
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Online Now</div>
+                <div className="flex flex-col gap-4 pl-4 sm:pl-7 md:pl-9 pr-2 sm:pr-4 pb-6">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    Online Now
+                  </div>
                   {activeUsers &&
-                    activeUsers.map((user) => <UserBox key={user.id} name={user.name} />)}
-                    
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2">Project Members</div>
-                  {members && members.map((member) => (
-                    <div key={member._id} className="flex items-center justify-between group/member">
-                      <UserBox name={member.user?.name || "Unknown"} />
-                      <div className="flex items-center gap-2">
-                        <select
-                          className="text-[10px] uppercase font-bold text-gray-400 bg-gray-800 px-1 py-0.5 rounded outline-none cursor-pointer"
-                          value={member.role}
-                          onChange={(e) => changeRole(roomId, member.user?._id || member.userId, e.target.value)}
-                        >
-                          <option value="owner">Owner</option>
-                          <option value="co-leader">Co-Leader</option>
-                          <option value="editor">Editor</option>
-                          <option value="viewer">Viewer</option>
-                        </select>
-                        <button
-                          onClick={() => useMemberStore.getState().removeMember(roomId, member.user?._id || member.userId)}
-                          className="opacity-0 group-hover/member:opacity-100 text-gray-500 hover:text-red-500 transition-all"
-                        >
-                          <UserMinus size={14} />
-                        </button>
+                    activeUsers.map((user) => (
+                      <UserBox key={user.id} name={user.name} />
+                    ))}
+
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2">
+                    Project Members
+                  </div>
+                  {members &&
+                    members.map((member) => (
+                      <div
+                        key={member._id}
+                        className="flex items-center justify-between group/member"
+                      >
+                        <UserBox name={member.user?.name || "Unknown"} />
+                        <div className="flex items-center gap-2">
+                          <select
+                            className="text-[10px] uppercase font-bold text-gray-400 bg-gray-800 px-1 py-0.5 rounded outline-none cursor-pointer"
+                            value={member.role}
+                            onChange={(e) =>
+                              changeRole(
+                                roomId,
+                                member.user?._id || member.userId,
+                                e.target.value,
+                              )
+                            }
+                          >
+                            <option value="owner">Owner</option>
+                            <option value="co-leader">Co-Leader</option>
+                            <option value="editor">Editor</option>
+                            <option value="viewer">Viewer</option>
+                          </select>
+                          <button
+                            onClick={() =>
+                              useMemberStore
+                                .getState()
+                                .removeMember(
+                                  roomId,
+                                  member.user?._id || member.userId,
+                                )
+                            }
+                            className="opacity-0 group-hover/member:opacity-100 text-gray-500 hover:text-red-500 transition-all"
+                          >
+                            <UserMinus size={14} />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
                   {pendingRequests && pendingRequests.length > 0 && (
                     <>
-                      <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2">Pending Requests</div>
+                      <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-4 mb-2">
+                        Pending Requests
+                      </div>
                       {pendingRequests.map((req) => (
-                        <div key={req._id} className="flex flex-col gap-2 bg-gray-800/50 p-3 rounded-md border border-gray-700">
-                          <span className="text-sm font-medium text-gray-200">{req.name || req.email}</span>
+                        <div
+                          key={req._id}
+                          className="flex flex-col gap-2 bg-gray-800/50 p-3 rounded-md border border-gray-700"
+                        >
+                          <span className="text-sm font-medium text-gray-200">
+                            {req.name || req.email}
+                          </span>
                           <div className="flex items-center gap-2">
-                            <button onClick={() => acceptJoin(roomId, req._id)} className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded transition-colors flex-1 font-medium">Accept</button>
-                            <button onClick={() => rejectJoin(roomId, req._id)} className="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 px-3 py-1.5 rounded transition-colors flex-1 font-medium">Reject</button>
+                            <button
+                              onClick={() => acceptJoin(roomId, req._id)}
+                              className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded transition-colors flex-1 font-medium"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => rejectJoin(roomId, req._id)}
+                              className="text-xs bg-red-500/20 hover:bg-red-500/40 text-red-400 px-3 py-1.5 rounded transition-colors flex-1 font-medium"
+                            >
+                              Reject
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -293,11 +343,15 @@ const RoomSidebar = ({ activeUsers }) => {
                 <span className="text-sm font-medium">Messages</span>
               </button>
               {active == "messages" && (
-                <div className="flex flex-col flex-1 pl-9 pb-2">
-                  <div className="flex flex-col gap-3 overflow-y-auto max-h-62.5 no-scrollbar mb-3">
-                    {chatMessages && chatMessages.map((msg) => (
-                      <Messages key={msg._id || msg.id || Date.now()} msg={msg} />
-                    ))}
+                <div className="flex flex-col flex-1 pl-4 sm:pl-7 md:pl-9 pb-2">
+                  <div className="flex flex-col gap-3 overflow-y-auto max-h-[260px] sm:max-h-[320px] no-scrollbar mb-3">
+                    {chatMessages &&
+                      chatMessages.map((msg) => (
+                        <Messages
+                          key={msg._id || msg.id || Date.now()}
+                          msg={msg}
+                        />
+                      ))}
                   </div>
 
                   <form onSubmit={handleSend} className="flex gap-2 mt-auto">
@@ -321,7 +375,7 @@ const RoomSidebar = ({ activeUsers }) => {
             </div>
           </div>
 
-          <div className="mt-auto flex items-center gap-4 text-gray-600 hover:text-gray-400 cursor-pointer transition-colors pt-6 border-t border-gray-800/50">
+          <div className="mt-auto flex items-center gap-3 sm:gap-4 text-gray-600 hover:text-gray-400 cursor-pointer transition-colors pt-5 sm:pt-6 border-t border-gray-800/50">
             <Settings size={20} />
             <span className="text-sm font-medium">Settings</span>
           </div>
