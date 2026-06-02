@@ -81,6 +81,7 @@ app.get("/health", (req, res) => {
 
 // Handle unknown routes
 app.use((req, res) => {
+  console.log("🌐" ,req.method, req.url);
   res.status(404).json({
     success: false,
     message: "Route not found",
