@@ -1,145 +1,192 @@
 import { nanoid } from "nanoid";
 import projectModel from "../../models/project.model.js";
-import AppError from "../../middleware/AppError.js";
-import asyncHandler from "../../middleware/asyncHandler.js";
 
-export const createProject = asyncHandler(async (req, res, next) => {
-  const { name } = req.body;
+export const createProject = async (req, res) => {
+  try {
+    const { name } = req.body;
 
-  if (!name) {
-    return next(new AppError("Project name is required.", 400));
+    if (!name) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Project name is required" });
+    }
+
+    const roomId = nanoid(10);
+
+    const newProject = await projectModel.create({
+      title: name,
+      roomId,
+      owner: req.user._id,
+      members: [{ user: req.user._id, role: "owner" }],
+      files: [
+        {
+          name: "main.js",
+          content: "// Welcome to Nexus IDE\nconsole.log('Hello World!');",
+          language: "javascript",
+        },
+      ],
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newProject,
+    });
+  } catch (error) {
+    console.error("Create Project Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
+};
 
-  const roomId = nanoid(10);
+export const getProjectDetails = async (req, res) => {
+  try {
+    const { roomId } = req.params;
 
-  const newProject = await projectModel.create({
-    title: name,
-    roomId,
-    owner: req.user._id,
-    members: [{ user: req.user._id, role: "owner" }],
-    files: [
-      {
-        name: "main.js",
-        content: "// Welcome to Nexus IDE\nconsole.log('Hello World!');",
-        language: "javascript",
-      },
-    ],
-  });
+    const project = await projectModel
+      .findOne({ roomId })
+      .populate("owner", "name photo email")
+      .populate("members.user", "name photo email")
+      .populate("requests", "email");
 
-  res.status(201).json({
-    success: true,
-    data: newProject,
-  });
-});
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
 
-export const getProjectDetails = asyncHandler(async (req, res, next) => {
-  const { roomId } = req.params;
-
-  const project = await projectModel
-    .findOne({ roomId })
-    .populate("owner", "name photo email")
-    .populate("members.user", "name photo email")
-    .populate("requests", "email");
-
-  if (!project) {
-    return next(new AppError("Project not found.", 404));
+    res.status(200).json({
+      success: true,
+      data: project,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
+};
 
-  res.status(200).json({
-    success: true,
-    data: project,
-  });
-});
+export const getMyProjects = async (req, res) => {
+  try {
+    const projects = await projectModel
+      .find({
+        "members.user": req.user._id,
+      })
+      .populate("owner", "name photo")
+      .select("-files")
+      .sort({ updatedAt: -1 });
 
-export const getMyProjects = asyncHandler(async (req, res) => {
-  const projects = await projectModel
-    .find({ "members.user": req.user._id })
-    .populate("owner", "name photo")
-    .select("-files")
-    .sort({ updatedAt: -1 });
-
-  return res.status(200).json({
-    success: true,
-    count: projects.length,
-    data: projects,
-  });
-});
-
-export const getAllProjects = asyncHandler(async (req, res) => {
-  const projects = await projectModel
-    .find({ isPublic: true })
-    .populate("owner", "name photo")
-    .select("-files")
-    .sort({ createdAt: -1 });
-
-  return res.status(200).json({
-    success: true,
-    count: projects.length,
-    data: projects,
-  });
-});
-
-export const getProject = asyncHandler(async (req, res, next) => {
-  const { roomId } = req.params;
-
-  const project = await projectModel
-    .findOne({ roomId })
-    .populate("owner", "name photo email")
-    .populate("members.user", "name photo email");
-
-  if (!project) {
-    return next(new AppError("Project not found.", 404));
+    return res.status(200).json({
+      success: true,
+      count: projects.length,
+      data: projects,
+    });
+  } catch (error) {
+    console.error("Get My Projects Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
+};
 
-  res.status(200).json({
-    success: true,
-    data: project,
-  });
-});
+export const getAllProjects = async (req, res) => {
+  try {
+    const projects = await projectModel
+      .find({ isPublic: true })
+      .populate("owner", "name photo")
+      .select("-files")
+      .sort({ createdAt: -1 });
 
-export const updateProject = asyncHandler(async (req, res, next) => {
-  const { roomId } = req.params;
-  const { name, isPublic } = req.body;
-
-  const project = await projectModel.findOne({ roomId });
-
-  if (!project) {
-    return next(new AppError("Project not found.", 404));
+    return res.status(200).json({
+      success: true,
+      count: projects.length,
+      data: projects,
+    });
+  } catch (error) {
+    console.error("Get All Projects Error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
+};
 
-  const updateData = {};
-  if (name !== undefined) updateData.title = name;
-  if (isPublic !== undefined) updateData.isPublic = isPublic;
+export const getProject = async (req, res) => {
+  try {
+    const { roomId } = req.params;
 
-  const updatedProject = await projectModel.findOneAndUpdate(
-    { roomId },
-    updateData,
-    { new: true }
-  );
+    const project = await projectModel
+      .findOne({ roomId })
+      .populate("owner", "name photo email")
+      .populate("members.user", "name photo email");
 
-  res.status(200).json({
-    success: true,
-    data: updatedProject,
-  });
-});
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
 
-export const deleteProject = asyncHandler(async (req, res, next) => {
-  const { roomId } = req.params;
-
-  const project = await projectModel.findOne({ roomId });
-
-  if (!project) {
-    return next(new AppError("Project not found.", 404));
+    res.status(200).json({
+      success: true,
+      data: project,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
+};
 
-  if (project.owner.toString() !== req.user._id.toString()) {
-    return next(new AppError("Only owners can delete projects.", 403));
+export const updateProject = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const { name, isPublic } = req.body;
+
+    const project = await projectModel.findOne({ roomId });
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.title = name;
+    if (isPublic !== undefined) updateData.isPublic = isPublic;
+
+    const updatedProject = await projectModel.findOneAndUpdate(
+      { roomId },
+      updateData,
+      { new: true },
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedProject,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
+};
 
-  await projectModel.findOneAndDelete({ roomId });
+export const deleteProject = async (req, res) => {
+  try {
+    const { roomId } = req.params;
 
-  res.status(200).json({
-    success: true,
-    message: "Project deleted successfully",
-  });
-});
+    const project = await projectModel.findOne({ roomId });
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Project not found" });
+    }
+
+    if (project.owner.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Only owners can delete projects" });
+    }
+
+    await projectModel.findOneAndDelete({ roomId });
+
+    res.status(200).json({
+      success: true,
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
