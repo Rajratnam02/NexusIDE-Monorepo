@@ -19,12 +19,12 @@ const httpServer = createServer(app);
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
-const CLIENT_URL = process.env.CLIENT_URL;
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
-// ---------- TRUST PROXY ----------
+// ================= TRUST PROXY =================
 app.set("trust proxy", 1);
 
-// ---------- SECURITY ----------
+// ================= SECURITY =================
 app.use(
   helmet({
     crossOriginResourcePolicy: {
@@ -33,7 +33,7 @@ app.use(
   })
 );
 
-// ---------- CORS ----------
+// ================= CORS =================
 app.use(
   cors({
     origin: CLIENT_URL,
@@ -42,7 +42,7 @@ app.use(
   })
 );
 
-// ---------- RATE LIMIT ----------
+// ================= RATE LIMITER =================
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -51,52 +51,61 @@ app.use(
     legacyHeaders: false,
     message: {
       success: false,
-      message: "Too many requests. Try again later.",
+      message: "Too many requests. Please try again later.",
     },
   })
 );
 
-// ---------- PERFORMANCE ----------
+// ================= PERFORMANCE =================
 app.use(compression());
 
-// ---------- LOGGING ----------
-if (NODE_ENV === "development") {
-  app.use(morgan("dev"));
-} else {
-  app.use(morgan("combined"));
-}
+// ================= LOGGING =================
+app.use(
+  morgan(
+    NODE_ENV === "development"
+      ? "dev"
+      : "combined"
+  )
+);
 
-// ---------- PARSERS ----------
+// ================= BODY PARSERS =================
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "10mb",
+  })
+);
+
 app.use(cookieParser());
 
-// ---------- HEALTH CHECK ----------
+// ================= HEALTH CHECK =================
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
     status: "OK",
+    environment: NODE_ENV,
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
 
-// ---------- ROUTES ----------
+// ================= API ROUTES =================
 app.use("/api", appRoutes);
 
-// ---------- 404 HANDLER ----------
-app.use("*", (req, res) => {
+// ================= 404 HANDLER (EXPRESS 5 SAFE) =================
+app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`,
+    message: `Cannot ${req.method} ${req.originalUrl}`,
   });
 });
 
-// ---------- GLOBAL ERROR HANDLER ----------
+// ================= GLOBAL ERROR HANDLER =================
 app.use((err, req, res, next) => {
-  console.error(err);
+  console.error("GLOBAL ERROR:", err);
 
-  res.status(err.statusCode || 500).json({
+  res.status(err.status || 500).json({
     success: false,
     message:
       NODE_ENV === "production"
@@ -108,44 +117,46 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ---------- START SERVER ----------
+// ================= SERVER START =================
 const startServer = async () => {
   try {
+    console.log("Connecting database...");
+
     await connectMongoose();
+
+    console.log("Database connected.");
 
     initSocket(httpServer);
 
     httpServer.listen(PORT, () => {
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`🌍 Environment: ${NODE_ENV}`);
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     });
+
   } catch (error) {
-    console.error("Startup Failed:", error);
+    console.error("SERVER STARTUP FAILED:", error);
     process.exit(1);
   }
 };
 
 startServer();
 
-// ---------- GRACEFUL SHUTDOWN ----------
-const gracefulShutdown = async () => {
-  console.log("\n🛑 Gracefully shutting down...");
+// ================= GRACEFUL SHUTDOWN =================
+const gracefulShutdown = (signal) => {
+  console.log(`\n${signal} received. Shutting down...`);
 
-  httpServer.close(async () => {
-    try {
-      console.log("HTTP Server Closed");
-      process.exit(0);
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
+  httpServer.close(() => {
+    console.log("HTTP server closed.");
+    process.exit(0);
   });
 };
 
-process.on("SIGINT", gracefulShutdown);
-process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
-// ---------- UNHANDLED ERRORS ----------
+// ================= PROCESS ERROR HANDLING =================
 process.on("uncaughtException", (err) => {
   console.error("UNCAUGHT EXCEPTION:", err);
   process.exit(1);
