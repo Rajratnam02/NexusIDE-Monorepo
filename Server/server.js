@@ -80,12 +80,21 @@ app.get("/health", (req, res) => {
 });
 
 // Handle unknown routes
-app.use((req, res) => {
-  console.log("🌐" ,req.method, req.url);
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+app.use((req,res,next)=>{
+
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🌐 REQUEST RECEIVED");
+    console.log("Method:", req.method);
+    console.log("URL:", req.originalUrl);
+    console.log("Params:", req.params);
+    console.log("Query:", req.query);
+    console.log("Body:", req.body);
+    console.log("Cookies:", req.cookies);
+    console.log("Header Cookie:", req.headers.cookie);
+    console.log("Authorization:", req.headers.authorization);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    next();
 });
 
 // Global error handler
