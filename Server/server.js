@@ -1,34 +1,30 @@
 import express from "express";
 import { createServer } from "http";
-import { configDotenv } from "dotenv";
+import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 
 import { initSocket } from "./realtime/socket.js";
 import appRoutes from "./routes/api.routes.js";
 import connectMongoose from "./config/db.config.js";
 
-// Load environment variables
-configDotenv({
-  quiet: true,
-});
-
-// Connect Database
-connectMongoose();
+dotenv.config({ quiet: true });
 
 const app = express();
 const httpServer = createServer(app);
 
-// Initialize Socket.IO
-initSocket(httpServer);
+const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || "development";
+const CLIENT_URL = process.env.CLIENT_URL;
 
-// Trust proxy
+// ---------- TRUST PROXY ----------
 app.set("trust proxy", 1);
 
-// Security middleware
+// ---------- SECURITY ----------
 app.use(
   helmet({
     crossOriginResourcePolicy: {
@@ -37,80 +33,125 @@ app.use(
   })
 );
 
-// Compression middleware
-app.use(compression());
-
-// Logging middleware
-app.use(morgan("combined"));
-
-// Rate limiting middleware
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: {
-    success: false,
-    message: "Too many requests from this IP, please try again later.",
-  },
-});
-
-app.use(limiter);
-
-// CORS middleware
+// ---------- CORS ----------
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: CLIENT_URL,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   })
 );
 
-// Body parser middleware
+// ---------- RATE LIMIT ----------
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: NODE_ENV === "production" ? 100 : 1000,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+      success: false,
+      message: "Too many requests. Try again later.",
+    },
+  })
+);
+
+// ---------- PERFORMANCE ----------
+app.use(compression());
+
+// ---------- LOGGING ----------
+if (NODE_ENV === "development") {
+  app.use(morgan("dev"));
+} else {
+  app.use(morgan("combined"));
+}
+
+// ---------- PARSERS ----------
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// API Routes
-app.use("/api", appRoutes);
-
-// Health check route
+// ---------- HEALTH CHECK ----------
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
     status: "OK",
+    uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
 
-// Handle unknown routes
-app.use((req,res,next)=>{
+// ---------- ROUTES ----------
+app.use("/api", appRoutes);
 
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🌐 REQUEST RECEIVED");
-    console.log("Method:", req.method);
-    console.log("URL:", req.originalUrl);
-    console.log("Params:", req.params);
-    console.log("Query:", req.query);
-    console.log("Body:", req.body);
-    console.log("Cookies:", req.cookies);
-    console.log("Header Cookie:", req.headers.cookie);
-    console.log("Authorization:", req.headers.authorization);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-    next();
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error("Error:", err.stack);
-
-  res.status(err.status || 500).json({
+// ---------- 404 HANDLER ----------
+app.use("*", (req, res) => {
+  res.status(404).json({
     success: false,
-    message: err.message || "Something went wrong!",
+    message: `Route ${req.originalUrl} not found`,
   });
 });
 
-// Server Port
-const port = process.env.PORT || 5000;
+// ---------- GLOBAL ERROR HANDLER ----------
+app.use((err, req, res, next) => {
+  console.error(err);
 
-// Start server
-httpServer.listen(port, () => {
-  console.log(`🚀 Server is running on port ${port}`);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message:
+      NODE_ENV === "production"
+        ? "Internal Server Error"
+        : err.message,
+    ...(NODE_ENV === "development" && {
+      stack: err.stack,
+    }),
+  });
+});
+
+// ---------- START SERVER ----------
+const startServer = async () => {
+  try {
+    await connectMongoose();
+
+    initSocket(httpServer);
+
+    httpServer.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`🌍 Environment: ${NODE_ENV}`);
+    });
+  } catch (error) {
+    console.error("Startup Failed:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
+
+// ---------- GRACEFUL SHUTDOWN ----------
+const gracefulShutdown = async () => {
+  console.log("\n🛑 Gracefully shutting down...");
+
+  httpServer.close(async () => {
+    try {
+      console.log("HTTP Server Closed");
+      process.exit(0);
+    } catch (err) {
+      console.error(err);
+      process.exit(1);
+    }
+  });
+};
+
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
+
+// ---------- UNHANDLED ERRORS ----------
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason);
+  process.exit(1);
 });
