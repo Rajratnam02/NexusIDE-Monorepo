@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import RoomNavbar from "../components/RoomNavbar";
 import RoomSidebar from "../components/RoomSidebar";
 import OutputPanel from "../components/OutputPanel";
@@ -48,6 +48,17 @@ const Room = () => {
     return activeFile?.content || "";
   };
 
+  // Persists language change to DB and updates Monaco + local store
+  const handleLanguageChange = async (newLang) => {
+    if (!activeFile || newLang === activeFile.language) return;
+    try {
+      await changeLanguage(roomId, activeFile._id, newLang);
+      updateActiveFileLanguage(newLang);
+    } catch (err) {
+      console.error("Failed to change language:", err);
+    }
+  };
+
   const { user } = useAuthStore();
   const { joinProject, requestJoin, cancelJoin } = useMemberStore();
 
@@ -59,7 +70,8 @@ const Room = () => {
   );
 
   const { currentProject, fetchProjectDetails, loading: projectLoading } = useProjectStore();
-  const { activeFile, openTabs, setActiveFile, closeTab } = useEditorStore();
+  const { activeFile, openTabs, setActiveFile, closeTab, updateActiveFileLanguage } = useEditorStore();
+  const { changeLanguage } = useProjectStore();
 
   const [ydoc, setYdoc] = useState(null);
   const [provider, setProvider] = useState(null);
@@ -321,66 +333,75 @@ const Room = () => {
         "
       >
 
-        {/* Tabs */}
-        <div
-          className="
-            flex
-            bg-[#0d0d0d]
-            border-b
-            border-gray-800
-            overflow-x-auto
-            whitespace-nowrap
-            no-scrollbar
-          "
-        >
+        {/* Tab bar + Language selector */}
+        <div className="flex items-center bg-[#0d0d0d] border-b border-gray-800">
 
-          {openTabs.map((tab) => (
-            <div
-              key={tab._id}
-              className={`
-                flex
-                items-center
-                shrink-0
-                gap-2
-                px-3 sm:px-4
-                py-2
-                cursor-pointer
-                border-r
-                border-gray-800
-                text-xs sm:text-sm
+          {/* Scrollable tabs */}
+          <div className="flex flex-1 overflow-x-auto whitespace-nowrap no-scrollbar">
+            {openTabs.map((tab) => (
+              <div
+                key={tab._id}
+                className={`
+                  flex items-center shrink-0 gap-2
+                  px-3 sm:px-4 py-2
+                  cursor-pointer border-r border-gray-800
+                  text-xs sm:text-sm
+                  ${
+                    activeFile?._id === tab._id
+                      ? "bg-[#1a1a1a] text-white border-t-2 border-t-blue-500"
+                      : "text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]/50"
+                  }
+                `}
+                onClick={() => setActiveFile(tab)}
+              >
+                <span className="truncate max-w-[120px] sm:max-w-none">{tab.name}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); closeTab(tab._id || tab.name); }}
+                  className="hover:bg-gray-700 rounded-md p-0.5 ml-1 transition-colors shrink-0"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
 
-                ${
-                  activeFile?._id === tab._id
-                    ? "bg-[#1a1a1a] text-white border-t-2 border-t-blue-500"
-                    : "text-gray-500 hover:text-gray-300 hover:bg-[#1a1a1a]/50"
-                }
-              `}
-              onClick={() => setActiveFile(tab)}
-            >
-
-              <span className="truncate max-w-[120px] sm:max-w-none">
-                {tab.name}
-              </span>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closeTab(tab._id || tab.name);
-                }}
+          {/* Language Selector — right side of tab bar */}
+          {activeFile && (
+            <div className="shrink-0 border-l border-gray-800 px-2">
+              <select
+                value={activeFile.language || "javascript"}
+                onChange={(e) => handleLanguageChange(e.target.value)}
+                title="Change file language"
                 className="
-                  hover:bg-gray-700
-                  rounded-md
-                  p-0.5
-                  ml-1
-                  transition-colors
-                  shrink-0
+                  bg-[#0d0d0d] text-gray-400 text-xs
+                  px-2 py-2 outline-none cursor-pointer
+                  hover:text-white transition-colors
+                  border-none
                 "
               >
-                <X size={14} />
-              </button>
-
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+                <option value="c">C</option>
+                <option value="go">Go</option>
+                <option value="rust">Rust</option>
+                <option value="php">PHP</option>
+                <option value="ruby">Ruby</option>
+                <option value="kotlin">Kotlin</option>
+                <option value="swift">Swift</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="sql">SQL</option>
+                <option value="json">JSON</option>
+                <option value="markdown">Markdown</option>
+                <option value="bash">Bash</option>
+                <option value="yaml">YAML</option>
+                <option value="plaintext">Plain Text</option>
+              </select>
             </div>
-          ))}
+          )}
 
         </div>
 
@@ -463,5 +484,6 @@ const Room = () => {
 };
 
 export default Room;
+
 
 

@@ -81,5 +81,17 @@ export const useEditorStore = create((set, get) => ({
     set({ openTabs: updatedTabs, activeFile: updatedActive });
   },
 
+  updateActiveFileLanguage: (language) => {
+    const { activeFile, openTabs } = get();
+    if (!activeFile) return;
+    const updated = { ...activeFile, language };
+    set({
+      activeFile: updated,
+      openTabs: openTabs.map((f) =>
+        (f._id || f.name) === (activeFile._id || activeFile.name) ? updated : f
+      ),
+    });
+  },
+
   clearEditor: () => set({ activeFile: null, openTabs: [], isSaving: false }),
 }));
