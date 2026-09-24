@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import RoomNavbar from "../components/RoomNavbar";
 import RoomSidebar from "../components/RoomSidebar";
+import OutputPanel from "../components/OutputPanel";
 import { Editor, useMonaco } from "@monaco-editor/react";
 import {
   draculaTheme,
@@ -40,6 +41,12 @@ const Room = () => {
 
   const [editor, setEditor] = useState(null);
   const [activeUsers, setActiveUsers] = useState([]);
+  const editorRef = useRef(null);
+
+  const getEditorContent = () => {
+    if (editorRef.current) return editorRef.current.getValue();
+    return activeFile?.content || "";
+  };
 
   const { user } = useAuthStore();
   const { joinProject, requestJoin, cancelJoin } = useMemberStore();
@@ -287,6 +294,7 @@ const Room = () => {
     <RoomNavbar
       theme={theme}
       setTheme={setTheme}
+      getEditorContent={getEditorContent}
     />
 
     <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -388,9 +396,10 @@ const Room = () => {
                 activeFile.language ||
                 "javascript"
               }
-              onMount={(editor) =>
-                setEditor(editor)
-              }
+              onMount={(editor) => {
+                setEditor(editor);
+                editorRef.current = editor;
+              }}
               options={{
                 padding: { top: 16 },
 
@@ -434,6 +443,9 @@ const Room = () => {
 
         </div>
 
+        {/* Output Panel */}
+        <OutputPanel />
+
       </div>
 
     </div>
@@ -443,3 +455,4 @@ const Room = () => {
 };
 
 export default Room;
+
