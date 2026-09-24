@@ -207,14 +207,10 @@ const Room = () => {
   useEffect(() => {
     if (!ydoc || !provider || !editor || !activeFile) return;
 
-    // Use a unique text identifier for each file in Yjs
+    // Use a unique text identifier per file in Yjs
     const ytext = ydoc.getText(activeFile._id);
-    
-    // Optional: if the document is totally empty locally and we have DB content, seed it
-    if (ytext.toString() === "" && activeFile.content) {
-      ytext.insert(0, activeFile.content);
-    }
 
+    // Create Monaco <-> Yjs binding immediately so the editor is ready
     const binding = new MonacoBinding(
       ytext,
       editor.getModel(),
@@ -222,8 +218,20 @@ const Room = () => {
       provider.awareness,
     );
 
+    // Seed from DB content ONLY after the provider has synced with the server.
+    // This prevents a race condition where empty local state overwrites
+    // the real persisted Yjs content that arrives slightly later.
+    const handleSync = (isSynced) => {
+      if (isSynced && ytext.toString() === "" && activeFile.content) {
+        ytext.insert(0, activeFile.content);
+      }
+    };
+
+    provider.on("sync", handleSync);
+
     return () => {
       binding.destroy();
+      provider.off("sync", handleSync);
     };
   }, [ydoc, provider, editor, activeFile]);
 
@@ -455,4 +463,5 @@ const Room = () => {
 };
 
 export default Room;
+
 
