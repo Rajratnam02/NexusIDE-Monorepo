@@ -1,4 +1,4 @@
-import {
+﻿import {
   ChevronLeft,
   FilesIcon,
   MessagesSquare,
@@ -20,6 +20,7 @@ import PopUps from "./PopUps";
 import { useEditorStore } from "../stores/EditorStore";
 import { useChatStore } from "../stores/ChatStore";
 import { useMemberStore } from "../stores/MemberStore";
+import { useAuthStore } from "../stores/AuthStore";
 
 const RoomSidebar = ({ activeUsers }) => {
   const { roomId } = useParams();
@@ -398,3 +399,6 @@ const RoomSidebar = ({ activeUsers }) => {
 };
 
 export default RoomSidebar;
+
+
+
